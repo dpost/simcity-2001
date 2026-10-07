@@ -14,7 +14,7 @@ function newWorld({ seed, mode, cityName, difficulty = 'normal' }) {
   Object.assign(W, {
     version: 2, seed, mode, cityName, difficulty,
     money: mode === 'creative' ? Infinity : DIFFICULTY[difficulty].money,
-    taxRate: 7, month: 0, year: 1, tod: 0.3, tier: 0, playTime: 0,
+    taxRate: 7, month: 2, year: 1, tod: 0.3, tier: 0, playTime: 0,
     terrain: new Uint8Array(N * N), tree: new Uint8Array(N * N), road: new Uint8Array(N * N),
     zone: new Uint8Array(N * N), bld: new Int32Array(N * N).fill(-1),
     buildings: new Map(), nextId: 1,

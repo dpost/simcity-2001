@@ -30,7 +30,7 @@ const UI = {
     }
     document.querySelectorAll('#speedBtns button').forEach((b) => b.addEventListener('click', () => { Sound.init(); Sound.play('click'); this.setSpeed(+b.dataset.speed); }));
     document.querySelectorAll('#overlayBtns button').forEach((b) => b.addEventListener('click', () => { Sound.play('click'); this.setOverlay(b.dataset.ov || null); }));
-    $('musicBtn').addEventListener('click', () => { Sound.init(); Sound.setMusic(!Sound.musicOn); this.syncAudio(); this.savePrefs(); });
+    $('musicBtn').addEventListener('click', () => { Sound.init(); Sound.play('click'); this.openJukebox(); });
     $('sfxBtn').addEventListener('click', () => { Sound.init(); Sound.setSfx(!Sound.sfxOn); this.syncAudio(); this.savePrefs(); Sound.play('click'); });
     $('menuBtn').addEventListener('click', () => { Sound.play('click'); this.openMenu(); });
     $('moneyBtn').addEventListener('click', () => { Sound.play('click'); this.openBudget(); });
@@ -389,6 +389,24 @@ const UI = {
     };
     $('modal').classList.remove('hidden'); render();
   },
+  openJukebox() {
+    const render = () => {
+      const rows = SONGS.map((s, i) => `<button class="btn${Music.mode === i ? ' primary' : ''}" data-song="${i}">${['🌞', '🐕', '🏙️', '🌙'][i] || '🎵'} ${escapeHtml(s.name)}${Music.songIdx === i && Sound.musicOn ? ' <small>♪ playing</small>' : ''}</button>`).join('');
+      $('modalCard').innerHTML = `<h2>🎶 Jukebox</h2><div class="menu-list">
+        <button class="btn${Sound.musicOn ? ' go' : ''}" data-song="toggle">${Sound.musicOn ? '🔊 Music is ON (click to turn off)' : '🔇 Music is OFF (click to turn on)'}</button>
+        <button class="btn${Music.mode === 'auto' ? ' primary' : ''}" data-song="auto">🔀 Play them all (shuffle)</button>${rows}</div>
+        ${this.moeTip('These songs were made just for this city. My favorite is the one about me. Obviously.')}
+        <div class="acts"><button class="btn primary" data-song="close">Done</button></div>`;
+      $('modalCard').querySelectorAll('[data-song]').forEach((b) => b.onclick = () => {
+        const v = b.dataset.song;
+        if (v === 'close') { this.closeModal(); return; }
+        if (v === 'toggle') { Sound.setMusic(!Sound.musicOn); this.syncAudio(); this.savePrefs(); }
+        else { if (!Sound.musicOn) { Sound.setMusic(true); this.syncAudio(); this.savePrefs(); } Music.pickSong(v === 'auto' ? 'auto' : +v); }
+        render();
+      });
+    };
+    $('modal').classList.remove('hidden'); render();
+  },
   openRename() {
     this.modal(`<h2>✏️ Rename your city</h2><input type="text" id="renameInput" maxlength="24" value="${escapeHtml(W.cityName)}">
       <div class="acts"><button class="btn" id="rnRandom">🎲 Random</button><button class="btn" id="rnCancel">Cancel</button><button class="btn primary" id="rnOk">Save name</button></div>`);
@@ -403,6 +421,7 @@ const UI = {
       <button class="btn" data-m="save">💾 Save city now</button>
       <button class="btn" data-m="download">📥 Download city file (to move to another computer)</button>
       <button class="btn" data-m="budget">💰 Budget &amp; taxes</button>
+      <button class="btn" data-m="music">🎶 Jukebox (pick a song)</button>
       <button class="btn" data-m="help">❓ How to play</button>
       <button class="btn" data-m="title">🏠 Save &amp; go to main menu</button>
       </div><div class="acts"><button class="btn primary" data-m="close">Back to building</button></div>`);
@@ -413,6 +432,7 @@ const UI = {
       if (m === 'download') { Save.save(); Save.download(); this.closeModal(); this.toast('📥 City file downloaded! Open it on another computer with "Load a city".'); }
       if (m === 'budget') this.openBudget();
       if (m === 'help') this.openHelp();
+      if (m === 'music') this.openJukebox();
       if (m === 'title') { Save.save(); this.closeModal(); showTitle(); }
       if (m === 'close') this.closeModal();
     });

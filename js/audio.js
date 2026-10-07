@@ -13,7 +13,7 @@ const Sound = {
     const c = (this.ctx = new AC());
     this.master = c.createGain(); this.master.gain.value = 0.9; this.master.connect(c.destination);
     this.sfx = c.createGain(); this.sfx.gain.value = this.sfxOn ? 0.55 : 0; this.sfx.connect(this.master);
-    this.music = c.createGain(); this.music.gain.value = this.musicOn ? 0.17 : 0; this.music.connect(this.master);
+    this.music = c.createGain(); this.music.gain.value = this.musicOn ? 0.26 : 0; this.music.connect(this.master);
     const len = c.sampleRate;
     const buf = c.createBuffer(1, len, c.sampleRate);
     const d = buf.getChannelData(0);
@@ -22,7 +22,7 @@ const Sound = {
     Music.start();
   },
 
-  setMusic(on) { this.musicOn = on; if (this.ctx) this.music.gain.setTargetAtTime(on ? 0.17 : 0, this.ctx.currentTime, 0.3); },
+  setMusic(on) { this.musicOn = on; if (this.ctx) this.music.gain.setTargetAtTime(on ? 0.26 : 0, this.ctx.currentTime, 0.3); },
   setSfx(on) { this.sfxOn = on; if (this.ctx) this.sfx.gain.setTargetAtTime(on ? 0.55 : 0, this.ctx.currentTime, 0.05); },
 
   tone(f, dur, o = {}) {
@@ -101,46 +101,153 @@ const Sound = {
   },
 };
 
-// A tiny generative band: bass, marimba arpeggio, melody and soft hi-hats.
+// =====================================================================
+//  The band: four original songs (lead, bass, chords, drums)
+//  Melodies use note names and lengths in eighth notes, e.g. "E5:2" = E5 for 2 eighths.
+// =====================================================================
+const SONGS = [
+  {
+    name: 'Sunny Side Street', bpm: 128, style: 'bounce', lead: 'square',
+    sections: {
+      intro: { chords: 'C G Am F', mel: 'r:32' },
+      A: { chords: 'C G Am F C G F G', mel: `E5 E5 G5 E5 D5 C5 D5:2 | B4 D5 G5:2 F5 E5 D5:2 | C5 C5 E5 C5 B4 A4 B4:2 | A4 C5 F5:2 E5:2 r:2 |
+        E5 E5 G5 E5 D5 C5 D5:2 | B4 D5 G5:2 A5 G5 F5:2 | F5 E5 D5 C5 A4:2 C5:2 | D5:4 r:4` },
+      B: { chords: 'F G Em Am F G C C', mel: `A5:2 A5 G5 A5:2 C6:2 | B5:2 G5 G5 D5:2 r:2 | G5:2 G5 F5 G5:2 B5:2 | A5:2 E5 E5 C5:2 r:2 |
+        A5:2 A5 G5 A5:2 C6:2 | D6:2 C6 B5 G5:2 B5:2 | C6:3 G5 E5 G5 C6:2 | C6:4 r:4` },
+      C: { chords: 'Am F C G', mel: 'E5:2 A5:2 G5:2 E5:2 | F5:2 A5:2 C6:2 A5:2 | G5:2 E5 G5 C6:2 G5:2 | D5 E5 F5 G5 A5 B5 C6 D6' },
+    },
+    order: ['intro', 'A', 'B', 'A', 'B', 'C', 'B', 'B'],
+  },
+  {
+    name: "Moe's Big Adventure", bpm: 150, style: 'gallop', lead: 'square',
+    sections: {
+      intro: { chords: 'G C D G', mel: 'r:32' },
+      A: { chords: 'G C D G Em C D D', mel: `G4 B4 D5 G5 F#5 G5 D5:2 | E5 G5 E5 C5 E5:2 r:2 | F#5 E5 D5 C5 B4 A4 B4 C5 | D5:4 B4:2 G4:2 |
+        E5 E5 F#5 G5 B5:2 G5:2 | E5 G5 E5 C5 A4:2 C5:2 | D5 C5 B4 A4 F#4:2 A4:2 | D5:6 r:2` },
+      B: { chords: 'C D Bm Em C D G G', mel: `E5:2 G5:2 C6:2 B5 A5 | A5:2 F#5:2 D5:2 E5 F#5 | G5:2 F#5 E5 D5:2 B4:2 | E5:2 G5:2 B5:4 |
+        C6:2 B5 A5 G5:2 E5:2 | A5:2 G5 F#5 D5:2 F#5:2 | G5:8 | r:4 D5 E5 F#5 A5` },
+    },
+    order: ['intro', 'A', 'B', 'A', 'B', 'B'],
+  },
+  {
+    name: 'Skyscraper Dreams', bpm: 116, style: 'anthem', lead: 'triangle',
+    sections: {
+      intro: { chords: 'F C Dm Bb', mel: 'r:32' },
+      A: { chords: 'F C Dm Bb F C Bb C', mel: `A4 C5 F5:2 E5 F5 G5:2 | E5:2 C5:2 G4:4 | A4 D5 F5:2 E5 D5 C5:2 | D5:4 r:4 |
+        A4 C5 F5:2 E5 F5 A5:2 | G5:2 E5:2 C5:4 | D5 D5 F5 D5 Bb4:2 D5:2 | C5:4 r:2 C5 E5` },
+      B: { chords: 'Bb F C Dm Bb F C F', mel: `F5:3 G5 A5:2 C6:2 | C6 A5 G5 F5 A5:4 | G5:3 A5 G5:2 E5:2 | D5 E5 F5 G5 A5:4 |
+        Bb5:3 A5 G5:2 F5:2 | A5:2 G5 F5 F5:4 | G5:2 A5 G5 E5:2 C5:2 | F5:6 r:2` },
+    },
+    order: ['intro', 'A', 'B', 'A', 'B', 'B'],
+  },
+  {
+    name: 'Starlight Avenue', bpm: 84, style: 'night', lead: 'sine', night: true,
+    sections: {
+      A: { chords: 'Am F C G Am F G C', mel: `E5:3 D5 C5:2 A4:2 | C5:3 D5 C5:2 A4:2 | G4:2 C5:2 E5:2 G5:2 | D5:6 r:2 |
+        E5:3 D5 C5:2 E5:2 | A5:3 G5 F5:2 C5:2 | D5:2 E5:2 F5:2 B4:2 | C5:6 r:2` },
+      B: { chords: 'F G Em Am F G C C', mel: `A5:4 G5:2 F5:2 | G5:4 D5:4 | E5:2 G5:2 B5:2 G5:2 | A5:6 r:2 |
+        F5:2 A5:2 C6:2 A5:2 | B5:2 G5:2 D5:4 | E5:2 G5:2 C6:4 | C6:6 r:2` },
+    },
+    order: ['A', 'B', 'A', 'B'],
+  },
+];
+
+const NOTE_IDX = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+function noteToMidi(n) { const m = n.match(/^([A-G])([#b]?)(\d)$/); if (!m) return null; return 12 * (+m[3] + 1) + NOTE_IDX[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0); }
+function chordNotes(name) {
+  const m = name.match(/^([A-G][#b]?)(m?)$/); const root = noteToMidi(m[1] + '3');
+  return [root, root + (m[2] ? 3 : 4), root + 7];
+}
+// turn a song into flat per-eighth arrays
+function compileSong(song) {
+  const mel = [], chords = [];
+  for (const secName of song.order) {
+    const sec = song.sections[secName], cs = sec.chords.split(/\s+/);
+    const start = mel.length;
+    for (const tok of sec.mel.replace(/\|/g, ' ').split(/\s+/).filter(Boolean)) {
+      const [n, d] = tok.split(':'), dur = +(d || 1);
+      mel.push(n === 'r' ? null : [noteToMidi(n), dur]);
+      for (let k = 1; k < dur; k++) mel.push(null);
+    }
+    const bars = Math.max(cs.length, Math.ceil((mel.length - start) / 8));
+    while (mel.length < start + bars * 8) mel.push(null);
+    for (let b = 0; b < bars; b++) chords.push(chordNotes(cs[b % cs.length]));
+  }
+  song.mel = mel; song.chordAt = chords; song.len = mel.length;
+  return song;
+}
+SONGS.forEach(compileSong);
+
 const Music = {
-  bpm: 98, step: 0, nextTime: 0, timer: null, melody: [],
-  prog: [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12], [0, 4, 7], [5, 9, 12], [7, 11, 14], [7, 11, 14]],
+  step: 0, nextTime: 0, timer: null, songIdx: 0, mode: 'auto', // 'auto' = playlist, or a fixed song index
   start() {
     if (this.timer || !Sound.ctx) return;
+    try { const m = localStorage.getItem('mayorNelly.song'); if (m != null && m !== 'auto') { this.mode = +m; this.songIdx = +m; } } catch (e) { /* ignore */ }
     this.nextTime = Sound.ctx.currentTime + 0.2;
-    this.makeMelody();
     this.timer = setInterval(() => this.schedule(), 60);
+    this.announce();
   },
+  get song() { return SONGS[this.songIdx]; },
   midi: (n) => 440 * Math.pow(2, (n - 69) / 12),
-  note(n, when, dur, type, vol) {
-    Sound.tone(this.midi(n), dur, { type, vol, when: when - Sound.ctx.currentTime, dest: Sound.music, attack: 0.012 });
+  note(n, when, dur, type, vol, attack = 0.012) {
+    Sound.tone(this.midi(n), dur, { type, vol, when: when - Sound.ctx.currentTime, dest: Sound.music, attack });
   },
+  drum(kind, when) {
+    const w = when - Sound.ctx.currentTime, M = Sound.music;
+    if (kind === 'k') Sound.tone(150, 0.18, { vol: 0.55, slide: 0.3, when: w, dest: M });
+    if (kind === 's') { Sound.noise(0.12, { filter: 'bandpass', freq: 1800, q: 0.8, vol: 0.18, when: w, dest: M }); Sound.tone(220, 0.08, { type: 'triangle', vol: 0.08, when: w, dest: M }); }
+    if (kind === 'h') Sound.noise(0.03, { filter: 'highpass', freq: 7000, vol: 0.05, when: w, dest: M });
+  },
+  pickSong(i) {
+    this.mode = i; if (i !== 'auto') this.songIdx = i;
+    this.step = 0; this.nextTime = Sound.ctx ? Sound.ctx.currentTime + 0.15 : 0;
+    try { localStorage.setItem('mayorNelly.song', String(i)); } catch (e) { /* ignore */ }
+    this.announce();
+  },
+  nextSong() {
+    if (this.mode !== 'auto') { this.step = 0; return; }
+    const night = typeof nightFactor === 'function' ? nightFactor() > 0.6 : false;
+    const cands = SONGS.map((s, i) => i).filter((i) => i !== this.songIdx && (night ? true : !SONGS[i].night));
+    this.songIdx = night && Math.random() < 0.6 ? SONGS.findIndex((s) => s.night) : pick(cands);
+    this.step = 0; this.announce();
+  },
+  announce() { if (Sound.musicOn && typeof UI !== 'undefined' && UI.toast) UI.toast(`🎶 Now playing: ${this.song.name}`); },
   schedule() {
     const c = Sound.ctx;
     if (!c || c.state !== 'running') return;
-    const spb = 60 / this.bpm / 2; // eighth notes
     if (this.nextTime < c.currentTime - 0.5) this.nextTime = c.currentTime + 0.05;
     while (this.nextTime < c.currentTime + 0.25) {
-      if (Sound.musicOn) this.playStep(this.step, this.nextTime);
+      const song = this.song, spb = 60 / song.bpm / 2;
+      if (this.step >= song.len) { this.nextSong(); continue; }
+      if (Sound.musicOn) this.playStep(song, this.step, this.nextTime, spb);
       this.nextTime += spb; this.step++;
-      if (this.step % 64 === 0) this.makeMelody();
     }
   },
-  playStep(s, t) {
-    const beat = s % 8, chord = this.prog[Math.floor(s / 8) % this.prog.length];
-    const night = typeof nightFactor === 'function' ? nightFactor() : 0;
-    if (beat === 0 || beat === 4 || (beat === 6 && night < 0.5)) this.note(36 + chord[0] + (beat === 6 ? 7 : 0), t, 0.45, 'triangle', 0.32);
-    const arp = [0, 1, 2, 1, 0, 1, 2, 1][beat];
-    if (night < 0.6 || beat % 2 === 0) this.note(60 + chord[arp] + (beat === 3 || beat === 7 ? 12 : 0), t, 0.3, 'sine', 0.11);
-    const m = this.melody[s % 64];
-    if (m) this.note(m, t, 0.4, night > 0.5 ? 'sine' : 'triangle', 0.12);
-    if (beat % 2 === 1 && night < 0.5) Sound.noise(0.03, { filter: 'highpass', freq: 7000, vol: 0.03, when: t - Sound.ctx.currentTime, dest: Sound.music });
-  },
-  makeMelody() {
-    const scale = [60, 62, 64, 67, 69, 72, 74, 76, 79];
-    const phrase = () => { const p = []; let k = rint(2, 5); for (let i = 0; i < 16; i++) { if (Math.random() < (i % 2 === 0 ? 0.6 : 0.25)) { k = clamp(k + rint(-2, 2), 0, scale.length - 1); p.push(scale[k]); } else p.push(null); } return p; };
-    const a = phrase(), b = phrase();
-    const a2 = a.map((n, i) => (i > 11 ? (b[i] || n) : n));
-    this.melody = [...a, ...a2, ...b, ...a];
+  playStep(song, s, t, spb) {
+    const beat = s % 8, chord = song.chordAt[Math.floor(s / 8)] || [48, 52, 55], root = chord[0] - 12;
+    const st = song.style;
+    // melody
+    const m = song.mel[s];
+    if (m) {
+      const d = m[1] * spb * 0.92;
+      this.note(m[0], t, d, song.lead, song.lead === 'square' ? 0.06 : 0.13);
+      if (song.lead === 'square') this.note(m[0], t, d, 'triangle', 0.07);
+    }
+    // bass
+    if (st === 'bounce' && (beat % 2 === 0)) this.note(beat === 2 || beat === 6 ? root + 7 : root, t, spb * 1.6, 'triangle', 0.3);
+    if (st === 'gallop' && [0, 3, 4, 6].includes(beat)) this.note(beat === 6 ? root + 7 : root, t, spb * 1.2, 'triangle', 0.3);
+    if (st === 'anthem' && [0, 3, 4, 6].includes(beat)) this.note(root, t, spb * 1.5, 'triangle', 0.32);
+    if (st === 'night' && beat === 0) this.note(root, t, spb * 7, 'sine', 0.3, 0.05);
+    // chords
+    if (st === 'bounce' && beat % 2 === 1) for (const n of chord) this.note(n + 12, t, spb * 0.7, 'triangle', 0.035);
+    if (st === 'gallop') this.note(chord[[0, 1, 2, 1][beat % 4]] + 12, t, spb * 0.8, 'sine', 0.08);
+    if (st === 'anthem' && (beat === 0 || beat === 4)) for (const n of chord) this.note(n + 12, t, spb * 3.6, 'sawtooth', 0.016, 0.06);
+    if (st === 'night' && beat % 2 === 0) this.note(chord[(beat / 2) % 3] + 24, t, spb * 2.5, 'sine', 0.05, 0.03);
+    // drums
+    if (st !== 'night') {
+      if (beat === 0 || beat === 4 || (st !== 'bounce' && beat === 3)) this.drum('k', t);
+      if (beat === 2 || beat === 6) this.drum('s', t);
+      if (st === 'anthem' ? beat % 2 === 0 : true) this.drum('h', t);
+    } else if (beat === 4) this.drum('h', t);
   },
 };
