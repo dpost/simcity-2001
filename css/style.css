@@ -110,6 +110,8 @@ canvas#view { position: fixed; inset: 0; display: block; touch-action: none; }
 #overlayBtns { display: flex; gap: 3px; margin-bottom: 6px; }
 #overlayBtns button { flex: 1; border: 0; background: #f6eff9; border-radius: 8px; height: 28px; font-size: 15px; }
 #overlayBtns button.on { background: var(--pink); }
+#xrayBtn { width: 100%; border: 0; background: #f6eff9; border-radius: 8px; height: 26px; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+#xrayBtn.on { background: var(--pink); color: #fff; }
 #overlayLegend { font-size: 11px; color: var(--ink-soft); margin: -2px 2px 5px; max-width: 192px; }
 #overlayLegend:empty { display: none; }
 #minimap { display: block; width: 192px; height: 100px; border-radius: 10px; background: #bfe6ff; cursor: pointer; }

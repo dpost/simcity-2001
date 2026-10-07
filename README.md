@@ -15,14 +15,16 @@ cat in code, so there are no image files.
 | 🏗️ **Growth map** | The map button (bottom right) shows why buildings are or aren't growing. Purple means skyscraper, green means ready to grow, orange means the spot needs to be nicer. |
 | 😊 **Niceness** | Parks, trees, water, schools, police and landmarks make land nicer. Factory smoke makes it worse. |
 | ⭐ 🎡 **Landmarks & Fun** | These unlock as the city grows: Village → Town → City → Big City → Metropolis → Megalopolis. Tourists pay to visit them. |
-| 🚶 **Walk** (`G`) | Walk around as Nelly, with Moe following. Use the arrow keys or WASD, and press `E` at a shop or house. You get a Mayor's salary every month, can pick up coins on the sidewalk, and can buy treats, clothes, things for Moe, and a home. Then you decorate the home with furniture. |
+| 🚶 **Walk** (`G`) | Walk around as Nelly, with Moe following. Use the arrow keys or WASD, and press `E` at a shop or house. You can swim in lakes and rivers (Moe paddles too). Stay away from radiation and fires! You get a Mayor's salary every month, can pick up coins on the sidewalk, and can buy treats, clothes, things for Moe, and a home. Then you decorate the home with furniture. |
 | 🌪️ **Disasters** (`X`) | Fire, tornado, tsunami and nuclear meltdown. Surprise disasters start once the city is a Town and can be turned off. Fire stations fight fires, and rubble clears itself (or you can build over it). |
 | 🎵 **Jukebox** | Four original songs. Pick one or shuffle. |
-| ❄️🌸☀️🍂 **Seasons** | Snow in winter, blossoms in spring, falling leaves in autumn. |
+| ❄️🌸☀️🍂 **Seasons** | Each season lasts 5 minutes of play: snow in winter, blossoms in spring, falling leaves in autumn. |
+| 👻 **See-through** (`H`) | Makes buildings see-through so you can see the roads. While walking, buildings in front of you fade automatically. |
+| 🍫 **Chocolate Factory** | Under 🎡 Fun. Has a chocolate waterfall, creates factory jobs, and you can take the tour and buy Nana's cookies. |
 | 🐕 **Moe** | The Chief Advisor teaches the basics, then hands out quests with cash rewards. |
 
 **Controls:** drag with 👆 Look (or right-drag with any tool) to move around. Scroll or pinch to zoom, or use WASD / arrow keys.
-Keys `1`–`0` pick tools, `Q` opens Fun, `G` walks, `X` opens Disasters, `Space` pauses, `Esc` cancels.
+Keys `1`–`0` pick tools, `Q` opens Fun, `G` walks, `X` opens Disasters, `H` toggles see-through, `Space` pauses, `Esc` cancels.
 Building over houses, zones, trees and small parks clears them automatically, so no bulldozing is needed.
 
 **Modes:** 🏆 *Career* comes in 🌱 Easy, ⭐ Normal (money is tight) and 🔥 Hard. 🎨 *Creative* gives unlimited money with everything unlocked.
@@ -53,6 +55,7 @@ const PERSONAL = {
   dad: 'David',
   dog: 'Moe',
   cat: 'Jason',
+  grandma: 'Nana',
   defaultCityName: 'Snortopolis',
   dogColors: { fur: '#f8f5ee', ears: '#ece2d0', muzzle: '#ffffff', nose: '#2b1d14', outline: '#cfc6b6', collar: '#ff6fa5' }, // Moe: white Pyrador
   catColors: { fur: '#f2a54a', stripes: '#c46f1c', eyes: '#62c050' }, // ...and Jason like Jason

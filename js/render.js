@@ -110,25 +110,35 @@ function bounceScale(b) {
   return [1 + (1 - sy) * 0.35, sy];
 }
 
+// buildings in front of Nelly (while walking) or everything (see-through mode) fade out so you can see
+function fadeOf(bx, by, size, height, isPark) {
+  if (Game.xray && Game.state === 'play' && !isPark) return 0.25;
+  const L = R.me;
+  if (!L || bx + size - 1 + by + size - 1 <= L.d) return 1;
+  const [X0, Y0] = Pw(bx, by);
+  if (Math.abs(L.X - X0) > size * 32 + 10) return 1;
+  if (L.Y < Y0 - height - 6 || L.Y - 26 > Y0 + size * 32) return 1;
+  return 0.28;
+}
 function drawStrip(b, k, night, t) {
   const g = R.g, spr = spriteFor(b), [X0, Y0] = Pw(b.x, b.y), left = X0 - spr.w / 2, top = Y0 - spr.height;
   const bs = bounceScale(b);
   if (bs) { g.save(); const ay = Y0 + b.size * 32; g.translate(X0, ay); g.scale(bs[0], bs[1]); g.translate(-X0, -ay); }
-  const ghost = Input.ghostOf === b;
-  if (ghost) g.globalAlpha = 0.5;
+  const fa = fadeOf(b.x, b.y, b.size, spr.height, BT[b.type] && BT[b.type].park);
   const dayImg = night < 0.97, nightImg = night > 0.01;
+  g.globalAlpha = fa;
   if (k < 0) {
     if (dayImg) g.drawImage(spr.cv, left, top, spr.w, spr.h);
-    if (nightImg) { g.globalAlpha = (dayImg ? night : 1) * (ghost ? 0.5 : 1); g.drawImage(spr.nv, left, top, spr.w, spr.h); g.globalAlpha = 1; }
+    if (nightImg) { g.globalAlpha = (dayImg ? night : 1) * fa; g.drawImage(spr.nv, left, top, spr.w, spr.h); }
   } else {
     const sx = k * 32;
     if (dayImg) g.drawImage(spr.cv, sx * SC, 0, 32 * SC, spr.h * SC, left + sx, top, 32.5, spr.h);
-    if (nightImg) { g.globalAlpha = dayImg ? night : 1; g.drawImage(spr.nv, sx * SC, 0, 32 * SC, spr.h * SC, left + sx, top, 32.5, spr.h); g.globalAlpha = 1; }
+    if (nightImg) { g.globalAlpha = (dayImg ? night : 1) * fa; g.drawImage(spr.nv, sx * SC, 0, 32 * SC, spr.h * SC, left + sx, top, 32.5, spr.h); }
   }
-  if (bs) g.restore();
   g.globalAlpha = 1;
+  if (bs) g.restore();
   if ((k === -1 || k === b.size) && ANIM[b.type]) {
-    g.save(); g.translate(X0, Y0);
+    g.save(); g.translate(X0, Y0); g.globalAlpha = fa;
     if (night > 0.1 && R.hasFilter) g.filter = `brightness(${1 - night * 0.5})`;
     ANIM[b.type](R.AP, b, t, night);
     g.restore();
@@ -226,6 +236,7 @@ function render(t, dt) {
   const v0 = clamp(Math.floor(Math.min(...corners.map((c) => c[1]))) - 1, 0, N - 1), v1 = clamp(Math.ceil(Math.max(...corners.map((c) => c[1]))) + 1, 0, N - 1);
 
   drawIsland(g, night);
+  R.me = Life.walking ? (() => { const [X, Y] = Pw(Life.u, Life.v); return { X, Y, d: Math.floor(Life.u) + Math.floor(Life.v) }; })() : null;
 
   // ---- ground ----
   const lamps = [], cached = z * R.dpr <= 1.05;
@@ -280,7 +291,7 @@ function render(t, dt) {
   for (const bk of R.buckets) bk.length = 0;
   Ents.bucketize(R.buckets);
   const needs = [];
-  const showNeeds = Game.state === 'play' && z > 0.45;
+  const showNeeds = Game.state === 'play' && z > 0.45 && !Life.walking;
   for (let d = u0 + v0; d <= u1 + v1; d++) {
     const xs = Math.max(u0, d - v1), xe = Math.min(u1, d - v0);
     for (let x = xs; x <= xe; x++) {
@@ -289,9 +300,11 @@ function render(t, dt) {
       const strips = D.strips[i];
       if (strips) for (const e of strips) drawStrip(e.b, e.k, night, t);
       else if (W.tree[i]) {
-        const spr = treeSprite(W.tree[i]);
+        const spr = treeSprite(W.tree[i]), fa = R.me ? fadeOf(x, y, 1, 50, true) : 1;
+        g.globalAlpha = fa;
         if (night < 0.97) g.drawImage(spr.cv, X - 32, Y - spr.height, spr.w, spr.h);
-        if (night > 0.01) { g.globalAlpha = night < 0.97 ? night : 1; g.drawImage(spr.nv, X - 32, Y - spr.height, spr.w, spr.h); g.globalAlpha = 1; }
+        if (night > 0.01) { g.globalAlpha = (night < 0.97 ? night : 1) * fa; g.drawImage(spr.nv, X - 32, Y - spr.height, spr.w, spr.h); }
+        g.globalAlpha = 1;
       }
       if (z > 0.55 && W.road[i] && ((x * 3 + y) % 4 === 0) && W.terrain[i] !== T_WATER) {
         const [lx, ly] = Pw(x + 0.12, y + 0.12);
@@ -312,6 +325,7 @@ function render(t, dt) {
   }
   FX.draw(R.P, night);
   Dis.drawSky(g, t);
+  Life.drawOnTop(g, t);
   Ents.drawFlyers(R.P, t, night);
   Input.drawPreview(g, t, night);
   Ents.drawClouds(R.P, z, night);

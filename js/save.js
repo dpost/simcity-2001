@@ -12,7 +12,7 @@ const Save = {
   serialize() {
     return {
       v: 2, game: 'mayor-nelly-city', seed: W.seed, mode: W.mode, difficulty: W.difficulty, cityName: W.cityName, money: W.mode === 'creative' ? null : Math.round(W.money),
-      taxRate: W.taxRate, month: W.month, year: W.year, tod: W.tod, tier: W.tier, playTime: W.playTime,
+      taxRate: W.taxRate, month: W.month, year: W.year, seasonT: W.seasonT, tod: W.tod, tier: W.tier, playTime: W.playTime,
       quest: W.quest, flags: W.flags, nextId: W.nextId,
       terrain: this.enc(W.terrain), tree: this.enc(W.tree), road: this.enc(W.road), zone: this.enc(W.zone),
       buildings: [...W.buildings.values()].map((b) => [b.id, b.type, b.x, b.y, b.level, b.variant]),
@@ -21,7 +21,7 @@ const Save = {
   },
   extras: [], // other systems (disasters, life mode...) register {save(), load(data)} here
   extraSave() { const o = {}; for (const e of this.extras) o[e.key] = e.save(); return o; },
-  metaOf() { return { cityName: W.cityName, pop: S.pop, tier: W.tier, mode: W.mode, difficulty: W.difficulty, date: `${MONTHS[W.month]}, Year ${W.year}`, savedAt: Date.now() }; },
+  metaOf() { return { cityName: W.cityName, pop: S.pop, tier: W.tier, mode: W.mode, difficulty: W.difficulty, date: `${SEASONS[SEASON].name}, Year ${W.year}`, savedAt: Date.now() }; },
 
   save(slot = Game.slot) {
     if (slot == null || Game.state !== 'play') return false;
@@ -52,6 +52,7 @@ const Save = {
       flags: data.flags || {}, nextId: data.nextId,
       terrain: this.dec(data.terrain), tree: this.dec(data.tree), road: this.dec(data.road), zone: this.dec(data.zone),
       bld: new Int32Array(N * N).fill(-1), buildings: new Map(),
+      seasonT: data.seasonT ?? (SEASON_ORDER.indexOf(seasonOf(data.month || 0)) * SEASON_SECONDS + ((data.year || 1) - 1) * SEASON_SECONDS * 4),
     });
     if (!W.quest.history) W.quest.history = [];
     for (const [id, type, x, y, level, variant] of data.buildings) {

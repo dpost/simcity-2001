@@ -14,7 +14,7 @@ function newWorld({ seed, mode, cityName, difficulty = 'normal' }) {
   Object.assign(W, {
     version: 2, seed, mode, cityName, difficulty,
     money: mode === 'creative' ? Infinity : DIFFICULTY[difficulty].money,
-    taxRate: 7, month: 2, year: 1, tod: 0.3, tier: 0, playTime: 0,
+    taxRate: 7, month: 2, year: 1, seasonT: 0, tod: 0.3, tier: 0, playTime: 0,
     terrain: new Uint8Array(N * N), tree: new Uint8Array(N * N), road: new Uint8Array(N * N),
     zone: new Uint8Array(N * N), bld: new Int32Array(N * N).fill(-1),
     buildings: new Map(), nextId: 1,
@@ -136,7 +136,7 @@ function price(c) { return W.mode === 'creative' ? c : Math.round(c * diff().cos
 // small things that building over automatically clears away (no bulldozing needed)
 const radAt = (i) => typeof Dis !== 'undefined' && Dis.rad[i] > 0;
 function clearRubble(x, y) { const i = idx(x, y); if (typeof Dis !== 'undefined' && Dis.rubble[i]) { Dis.rubble[i] = 0; markGround(x, y); } }
-function replaceable(b) { return !BT[b.type] || (BT[b.type].park && BT[b.type].size === 1); }
+function replaceable(b) { return !(typeof Life !== 'undefined' && b.id === Life.homeId) && (!BT[b.type] || (BT[b.type].park && BT[b.type].size === 1)); }
 function canAfford(c) { return W.mode === 'creative' || W.money >= c; }
 function spend(c) { if (W.mode !== 'creative') W.money -= c; }
 function roadMask(x, y) {

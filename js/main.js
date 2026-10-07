@@ -33,7 +33,7 @@ function enterPlay() {
   Life.toggleWalk(false); Home.isOpen = false; $('homeView').classList.add('hidden'); UI.updateWallet();
   UI.renderQuests();
   News.timer = 0; News.queue = []; News.recent = [];
-  setSeason(seasonOf(W.month));
+  setSeason(seasonByT(W.seasonT || 0));
   Game.autosaveT = 30;
 }
 
@@ -106,7 +106,7 @@ function buildDemoCity() {
   resetSimState(); primeSim();
   Ents.reset(); FX.reset();
   Ents.launchTimer = 8;
-  W.tod = 0.62; W.month = 5; setSeason('summer');
+  W.tod = 0.62; W.seasonT = SEASON_SECONDS * 1.5; setSeason('summer');
   Cam.zoom = Cam.tz = 0.95; centerOnTile(32, 32);
 }
 
@@ -120,7 +120,7 @@ function frame(now) {
     const gdt = paused ? 0 : dt * Game.speed;
     simUpdate(gdt);
     Dis.update(gdt, dt);
-    if (!paused) Life.update(dt);
+    if (!paused) { Life.update(dt); updateSeasons(dt); }
     Home.draw(dt);
     Input.updateKeys(dt);
     Ents.update(dt, gdt, nightFactor());

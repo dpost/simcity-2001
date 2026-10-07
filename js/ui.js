@@ -36,7 +36,9 @@ const UI = {
     $('moneyBtn').addEventListener('click', () => { Sound.play('click'); this.openBudget(); });
     $('cityBtn').addEventListener('click', () => { Sound.play('click'); this.openRename(); });
     $('walletBtn').addEventListener('click', () => { Sound.play('click'); MyStuff.open(); });
+    $('xrayBtn').addEventListener('click', () => { Sound.play('click'); this.toggleXray(); });
     $('walkStuff').addEventListener('click', () => { Sound.play('click'); MyStuff.open(); });
+    $('walkHome').addEventListener('click', () => Life.goHome());
     $('walkStop').addEventListener('click', () => { Sound.play('click'); Life.toggleWalk(false); });
     const hc = $('homeCanvas');
     hc.addEventListener('pointerdown', (e) => Home.pointer(e, 'down'));
@@ -145,6 +147,7 @@ const UI = {
     $('statWallet').textContent = fmtMoney(Life.wallet);
     if (pay) { const el = $('walletBtn'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
   },
+  toggleXray() { Game.xray = !Game.xray; $('xrayBtn').classList.toggle('on', Game.xray); },
   setSpeed(s) {
     if (s > 0) Game.lastSpeed = s;
     Game.speed = s;
@@ -178,7 +181,7 @@ const UI = {
     $('powerStat').classList.toggle('warn', S.shortage);
     const night = nightFactor();
     $('timeIco').textContent = night > 0.5 ? '🌙' : duskFactor() > 0.4 ? '🌅' : '🌞';
-    $('statDate').textContent = `${SEASONS[SEASON].icon} ${MONTHS[W.month]}, Year ${W.year}`;
+    $('statDate').textContent = `${SEASONS[SEASON].icon} ${SEASONS[SEASON].name} · Year ${W.year}`;
     $('cityName').textContent = W.cityName;
     $('tierBadge').textContent = `${TIERS[W.tier].icon} ${TIERS[W.tier].name}`;
     this.miniT -= dt;
@@ -210,6 +213,9 @@ const UI = {
     const m = (X, Y) => [X / 32 * 1.5 + 96, Y / 16 * 0.75 + 2];
     const [x0, y0] = m(ax, ay), [x1, y1] = m(bx, by);
     g.strokeStyle = '#ffffff'; g.lineWidth = 1.5; g.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    const hm = Life.home();
+    if (hm) { const px = (hm.x - hm.y) * 1.5 + 96, py = (hm.x + hm.y) * 0.75 + 2; g.fillStyle = '#ff3d7f'; g.strokeStyle = '#fff'; g.lineWidth = 1.5; g.beginPath(); g.arc(px, py, 3.5, 0, 7); g.fill(); g.stroke(); }
+    if (Life.walking) { const px = (Life.u - Life.v) * 1.5 + 96, py = (Life.u + Life.v) * 0.75 + 2; g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(px, py, 2.5, 0, 7); g.fill(); g.stroke(); }
   },
   miniClick(e) {
     const r = $('minimap').getBoundingClientRect();

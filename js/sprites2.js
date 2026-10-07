@@ -177,3 +177,32 @@ Object.assign(ANIM, {
     g.restore();
   },
 });
+
+// ---------------- the big chocolate factory ----------------
+ART.chocofactory = (p) => {
+  const g = p.g;
+  [[0.35, 0.3, 96], [0.7, 0.25, 84]].forEach(([u, v, h]) => { p.cyl(u, v, 0, h, 6.5, '#6b3e22'); for (let z = 16; z < h - 4; z += 20) p.band(u, v, z, z + 6, 6.5, '#ff8fb8'); p.emit(u, v, h + 2); });
+  p.box(0.2, 0.5, 1.45, 1.75, 0, 40, '#7a4b2a');
+  p.winsL(0.25, 1.4, 1.75, 6, 34, 5, 2, { col: '#ffd9a8' });
+  p.winsR(0.55, 1.7, 1.45, 6, 34, 4, 2, { col: '#e6b98a' });
+  p.box(0.2, 0.5, 1.45, 1.75, 40, 44, '#5a2f1a');
+  // giant chocolate bar on the roof
+  p.box(0.45, 0.85, 1.2, 1.3, 44, 52, '#4a2512', { top: '#6b3a1e' });
+  for (let k = 0; k < 3; k++) for (let j = 0; j < 2; j++) p.box(0.5 + k * 0.24, 0.9 + j * 0.2, 0.68 + k * 0.24, 1.06 + j * 0.2, 52, 54, '#5a2f1a', { top: '#7a4428' });
+  p.poly([p.iso(0.7, 1.15, 54), p.iso(1.2, 1.15, 54), p.iso(1.2, 1.32, 46), p.iso(0.7, 1.32, 46)], '#e8e8f0');
+  // candy pipes
+  p.line(p.iso(1.45, 1.0, 30), p.iso(1.8, 1.0, 30), '#ff8fb8', 4); p.line(p.iso(1.8, 1.0, 30), p.iso(1.8, 1.0, 0), '#ff8fb8', 4);
+  p.line(p.iso(1.45, 0.7, 22), p.iso(1.75, 0.55, 22), '#5ce1e6', 3);
+  // chocolate pool at the bottom of the waterfall
+  const [px, py] = p.iso(1.75, 1.6, 0); p.ellipse(px, py, 16, 7, '#5a2f1a', '#e8dcc4'); p.ellipse(px - 3, py - 1, 9, 3, '#7a4b2a');
+  p.board(...p.iso(0.85, 1.75, 30), 44, 9, '#ff6fa5', 'CHOCOLATE', '#ffffff', 6, { glow: '#ff9fcf' });
+};
+ANIM.chocofactory = (p, b, t) => {
+  const g = p.g, [x0, y0] = p.iso(1.45, 1.55, 36), [x1, y1] = p.iso(1.72, 1.6, 0);
+  g.strokeStyle = '#6b3a1e'; g.lineWidth = 6; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(x0 + 10, y0 + 4, x1, y1 - 2); g.stroke();
+  g.strokeStyle = '#a0663c'; g.lineWidth = 2; g.setLineDash([3, 5]); g.lineDashOffset = -t * 30;
+  g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(x0 + 10, y0 + 4, x1, y1 - 2); g.stroke(); g.setLineDash([]);
+  for (let k = 0; k < 3; k++) { const ph = (t * 1.2 + k / 3) % 1; g.globalAlpha = 1 - ph; g.strokeStyle = '#a0663c'; g.lineWidth = 1; g.beginPath(); g.ellipse(x1, y1, 4 + ph * 10, 2 + ph * 4, 0, 0, 7); g.stroke(); }
+  g.globalAlpha = 1;
+};

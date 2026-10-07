@@ -124,9 +124,11 @@ const Ents = {
     for (const p of this.peds) { const [u, v, dx, dy] = this.moverPos(p, 0.38 * p.side); add(Math.floor(u) + Math.floor(v), { ped: p, u, v, dx, dy }); }
     for (const b of this.boats) add(Math.floor(b.u) + Math.floor(b.v), { boat: b });
     Life.bucketize(buckets);
+    Dis.bucketize(buckets);
   },
   drawItem(P, it, night, t) {
-    if (it.life) Life.drawItem(P, it, night, t);
+    if (it.wave) Dis.drawWaveSeg(P, it.k, t);
+    else if (it.life) Life.drawItem(P, it, night, t);
     else if (it.car) this.drawCar(P, it, night);
     else if (it.ped) this.drawPed(P, it, night, t);
     else if (it.boat) this.drawBoat(P, it.boat, t);
@@ -331,10 +333,10 @@ const FX = {
       this.smokeT = 0.3;
       for (const b of W.buildings.values()) {
         if (!b.powered && !(BT[b.type] && BT[b.type].power)) continue;
-        if (!(b.type === 'I' && b.level >= 2) && b.type !== 'coal' && b.type !== 'nuclear') continue;
+        if (!(b.type === 'I' && b.level >= 2) && b.type !== 'coal' && b.type !== 'nuclear' && b.type !== 'chocofactory') continue;
         if (!Game.visible(b.x, b.y, 4)) continue;
         const spr = spriteFor(b);
-        for (const [ex, ey] of spr.emit) { const [X0, Y0] = Pw(b.x, b.y, 0); this.smoke(X0 + ex, Y0 + ey, b.type === 'nuclear' ? 5 : 2.5, b.type === 'coal' ? '#9a9aa2' : b.type === 'nuclear' ? '#f4f6f8' : '#d8d8de', 3.5); }
+        for (const [ex, ey] of spr.emit) { const [X0, Y0] = Pw(b.x, b.y, 0); this.smoke(X0 + ex, Y0 + ey, b.type === 'nuclear' ? 5 : 2.5, b.type === 'coal' ? '#9a9aa2' : b.type === 'nuclear' ? '#f4f6f8' : b.type === 'chocofactory' ? '#ffc6dd' : '#d8d8de', 3.5); }
       }
     }
   },

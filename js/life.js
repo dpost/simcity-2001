@@ -13,7 +13,7 @@ const ITEMS = {
   sundae: { name: 'Giant Sundae', icon: '🍨', price: 8, kind: 'food', msg: 'Three scoops, sprinkles AND a cherry!' },
   cupcake: { name: 'Sprinkle Cupcake', icon: '🧁', price: 3, kind: 'food', msg: 'So many sprinkles!' },
   donut: { name: `${POSS(PERSONAL.dad)} Famous Donut`, icon: '🍩', price: 2, kind: 'food', msg: `${PERSONAL.dad} says it's the best donut in town. He's right!` },
-  cookie: { name: 'Chocolate Chip Cookie', icon: '🍪', price: 2, kind: 'food', msg: `Crunchy! ${PERSONAL.dog} is staring at you. Very hard.` },
+  cookie: { name: `${POSS(PERSONAL.grandma)} Chocolate Chip Cookies`, icon: '🍪', price: 3, kind: 'food', msg: `Warm and gooey, just like ${PERSONAL.grandma} makes! (${PERSONAL.dog} is staring at you. Very hard.)` },
   cake: { name: 'Party Cake', icon: '🎂', price: 15, kind: 'food', msg: 'PARTY TIME! 🎉', party: true },
   lollipop: { name: 'Giant Lollipop', icon: '🍭', price: 1, kind: 'food', msg: 'This will take about a week to finish.' },
   gummies: { name: 'Gummy Bears', icon: '🐻', price: 2, kind: 'food', msg: 'You saved the red ones for last.' },
@@ -24,6 +24,7 @@ const ITEMS = {
   melon: { name: 'Watermelon Slice', icon: '🍉', price: 3, kind: 'food', msg: 'You spit the seeds really far.' },
   popcorn: { name: 'Popcorn', icon: '🍿', price: 4, kind: 'food', msg: 'Buttery!' },
   snack: { name: 'Bag of Chips', icon: '🥨', price: 2, kind: 'food', msg: 'Crunch crunch crunch.' },
+  tour: { name: 'Chocolate Factory Tour', icon: '🏭', price: 6, kind: 'fun', msg: 'You saw the chocolate waterfall, a gummy bear machine, and got a free sample. Best tour ever!' },
   // furniture (w x d tiles in your room)
   bed: { name: 'Cozy Bed', icon: '🛏️', price: 120, kind: 'furn', w: 1, d: 2 },
   bunk: { name: 'Bunk Bed', icon: '🛏️', price: 260, kind: 'furn', w: 1, d: 2 },
@@ -50,6 +51,7 @@ const ITEMS = {
   cattower: { name: `Cat Tower for ${PERSONAL.cat}`, icon: '🐱', price: 70, kind: 'furn', w: 1, d: 1 },
   telescope: { name: 'Telescope', icon: '🔭', price: 400, kind: 'furn', w: 1, d: 1 },
   robot: { name: 'Robot Buddy', icon: '🤖', price: 800, kind: 'furn', w: 1, d: 1 },
+  chocofountain: { name: 'Chocolate Fountain', icon: '⛲', price: 160, kind: 'furn', w: 1, d: 1 },
   disco: { name: 'Disco Ball', icon: '🪩', price: 150, kind: 'furn', w: 1, d: 1 },
   // clothes
   tee_pink: { name: 'Pink T-shirt', icon: '👚', price: 15, kind: 'outfit', shirt: '#ff6fa5' },
@@ -106,6 +108,7 @@ const STORES = {
   observatory: { name: 'Star Observatory', icon: '🔭', items: ['stars', 'telescope'] },
   museum: { name: 'Museum', icon: '🦕', items: ['museumtix'] },
   cinema: { name: 'Movie Theater', icon: '🎬', items: ['movie', 'popcorn'] },
+  chocofactory: { name: 'Chocolate Factory', icon: '🍫', items: ['tour', 'choco', 'cookie', 'cocoa', 'chocofountain'] },
   market: { name: 'Farmers Market', icon: '🍎', items: ['apple', 'melon', 'flowers', 'plant'] },
   ferris: { name: 'Ferris Wheel', icon: '🎡', items: ['wheel', 'popcorn'] },
   skytower: { name: BT.skytower.name, icon: '🗼', items: ['skyview'] },
@@ -116,6 +119,8 @@ const STORES = {
 };
 function storeFor(b) {
   if (b.type === 'C') return [null, ['icecream', 'bakery', 'pets', 'candy', 'pizza'], ['general', 'boutique', 'books'], ['electronics', 'megamall', 'tech']][b.level][b.variant % ZDESIGNS.C[b.level]];
+  if (b.type === 'I' && b.level === 1 && b.variant % 4 === 3) return 'chocofactory';
+  if (b.type === 'I' && b.level === 2 && b.variant % 3 === 1) return 'chocofactory';
   return STORES[b.type] ? b.type : null;
 }
 function homePrice(b) { return Math.round([0, 800, 2500, 6000][b.level] * (0.8 + D.lv[idx(b.x, b.y)] / 100)); }
@@ -167,7 +172,7 @@ const Life = {
       }
       this.u = sx; this.v = sy; this.moe = { u: sx - 0.3, v: sy - 0.3, trail: [] };
       this.walking = true; Input.setTool('inspect'); UI.closeFlyout(); UI.hideInfo();
-      Cam.tz = Math.max(Cam.tz, 2.1);
+      Cam.tz = 1.9;
       $('walkHud').classList.remove('hidden'); document.body.classList.add('walking');
       if (!W.flags.walkedOnce) { W.flags.walkedOnce = true; UI.say(`Let's go for a walk, Mayor ${PERSONAL.mayor}! Use the arrow keys (or WASD) to walk. Walk up to a shop or a house and press E to go inside. You get a Mayor's salary every month to spend!`, 'dog'); }
     } else {
@@ -179,8 +184,7 @@ const Life = {
     const x = Math.floor(u), y = Math.floor(v);
     if (!inb(x, y)) return false;
     const i = idx(x, y);
-    if (W.terrain[i] === T_WATER && !W.road[i]) return false;
-    const b = buildingAt(x, y);
+    const b = buildingAt(x, y); // (water is fine: you can swim!)
     if (b && !(BT[b.type] && BT[b.type].park)) return false;
     return true;
   },
@@ -193,8 +197,15 @@ const Life = {
     if (k.arrowleft || k.a) { du -= 1; dv += 1; this.face = 'left'; }
     if (k.arrowright || k.d) { du += 1; dv -= 1; this.face = 'right'; }
     this.moving = !!(du || dv);
+    const ti = idx(clamp(Math.floor(this.u), 0, N - 1), clamp(Math.floor(this.v), 0, N - 1));
+    const water = W.terrain[ti] === T_WATER && !W.road[ti], wasIn = this.inWater;
+    this.inWater = water && SEASON !== 'winter'; this.onIce = water && SEASON === 'winter';
+    if (this.inWater && !wasIn) { Sound.play('splash'); const [sx, sy] = Pw(this.u, this.v); for (let q = 0; q < 14; q++) FX.parts.push({ X: sx, Y: sy - 2, vx: rnd(-25, 25), vy: rnd(-45, -15), r: 1.4, life: 0.7, max: 0.7, col: '#bfe9ff', kind: 'spark', g: 90 }); if (!W.flags.swam) { W.flags.swam = true; UI.toast(`🏊 Splash! You're swimming! (${PERSONAL.dog} is doing the doggy paddle.)`); } }
+    if (this.onIce && !this.wasOnIce && !W.flags.iced) { W.flags.iced = true; UI.toast('⛸️ The water is frozen solid! Wheee, slippery!'); }
+    this.wasOnIce = this.onIce;
+    this.hazards(dt, ti);
     if (this.moving) {
-      const len = Math.hypot(du, dv), sp = 2.6 * dt;
+      const len = Math.hypot(du, dv), sp = (this.inWater ? 1.3 : this.onIce ? 3.4 : 2.6) * dt;
       const nu = this.u + (du / len) * sp, nv = this.v + (dv / len) * sp;
       if (this.walkable(nu, nv)) { this.u = nu; this.v = nv; }
       else if (this.walkable(nu, this.v)) this.u = nu;
@@ -286,26 +297,99 @@ const Life = {
     UI.toast(`${it.icon} ${msg}`);
     return true;
   },
+  // radiation makes you sick (and barf!), fire is too hot to touch
+  hazards(dt, ti) {
+    this.burnT = Math.max(0, (this.burnT || 0) - dt);
+    if (Dis.rad[ti]) {
+      if (!this.sick) UI.toast('☢️ Ewww, radiation! You feel sick! Get out of the green glow!');
+      this.sick = (this.sick || 0) + dt;
+      this.barfT = (this.barfT || 0) - dt;
+      if (this.barfT <= 0) {
+        this.barfT = rnd(0.9, 1.6); Sound.play('barf');
+        const [x, y] = Pw(this.u, this.v);
+        FX.texts.push({ X: x + 6, Y: y - 24, txt: '🤢', life: 1.2, max: 1.2, col: '#7fd34a' });
+        for (let q = 0; q < 12; q++) FX.parts.push({ X: x + 2, Y: y - 13, vx: rnd(5, 30), vy: rnd(-20, 5), r: rnd(1, 2), life: 0.9, max: 0.9, col: pick(['#9fd35a', '#c6e86a', '#7fbf3a']), kind: 'spark', g: 120 });
+      }
+      if (this.sick > 7) this.faint();
+    } else this.sick = Math.max(0, (this.sick || 0) - dt * 0.6);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const b = buildingAt(Math.floor(this.u) + dx, Math.floor(this.v) + dy);
+      if (!b || !Dis.fire.has(b.id)) continue;
+      const cu = clamp(this.u, b.x, b.x + b.size), cv = clamp(this.v, b.y, b.y + b.size), d = Math.hypot(cu - this.u, cv - this.v);
+      if (d < 0.7) {
+        const a = Math.atan2(this.v - cv, this.u - cu) || 0, nu = this.u + Math.cos(a) * 0.5, nv = this.v + Math.sin(a) * 0.5;
+        if (this.walkable(nu, nv)) { this.u = nu; this.v = nv; }
+        if (this.burnT <= 0) { this.burnT = 1.2; Sound.play('ouch'); UI.toast('🔥 OUCH! Too hot! Fires are dangerous. Let the firefighters handle it!'); const [x, y] = Pw(this.u, this.v); FX.texts.push({ X: x, Y: y - 26, txt: 'OUCH!', life: 1, max: 1, col: '#ff5a1f' }); }
+      }
+    }
+  },
+  faint() {
+    this.sick = 0;
+    const hosp = [...W.buildings.values()].filter((b) => b.type === 'hospital' || b.type === 'clinic');
+    let spot = null;
+    for (const b of hosp.length ? hosp : [this.home()].filter(Boolean)) {
+      for (const [ox, oy] of [[0.5, b.size + 0.4], [b.size + 0.4, 0.5], [-0.4, 0.5], [0.5, -0.4]]) if (!spot && this.walkable(b.x + ox, b.y + oy) && !Dis.rad[idx(Math.floor(b.x + ox), Math.floor(b.y + oy))]) spot = [b.x + ox, b.y + oy];
+    }
+    if (!spot) { for (const i of D.roadList) if (!Dis.rad[i]) { spot = [(i % N) + 0.5, ((i / N) | 0) + 0.5]; if (Math.random() < 0.05) break; } }
+    if (spot) { [this.u, this.v] = spot; this.moe = { u: this.u - 0.3, v: this.v - 0.3, trail: [] }; const [X, Y] = Pw(this.u, this.v); Cam.x = X; Cam.y = Y - 20; }
+    const fee = Math.min(this.wallet, 100); this.wallet -= fee; UI.updateWallet();
+    FX.parts.push({ X: Cam.x, Y: Cam.y, vx: 0, vy: 0, r: 400, life: 0.6, max: 0.6, col: '#ffffff', kind: 'flash' });
+    Sound.play('error');
+    UI.say(`😵 You fainted from the radiation and woke up ${hosp.length ? 'in the hospital' : 'at home'}! The doctor says: "Stay away from glowing green stuff!" ${fee ? `(The doctor bill was ${fmtMoney(fee)}.)` : ''}`, 'dog');
+  },
+  goHome() {
+    const h = this.home(); if (!h) { UI.toast("You don't have a home yet. Walk up to a house and press E!"); return; }
+    if (!this.walking) this.toggleWalk(true);
+    this.u = h.x + 0.5; this.v = h.y + 1.3; if (!this.walkable(this.u, this.v)) { this.u = h.x + 1.3; this.v = h.y + 0.5; }
+    this.moe = { u: this.u - 0.3, v: this.v - 0.3, trail: [] }; this.near = null;
+    const [X, Y] = Pw(this.u, this.v); Cam.x = X; Cam.y = Y - 20;
+    for (let k = 0; k < 20; k++) FX.parts.push({ X: X + rnd(-10, 10), Y: Y - rnd(0, 20), vx: rnd(-20, 20), vy: rnd(-30, 0), r: 1.5, life: 0.8, max: 0.8, col: '#ff9fcf', kind: 'spark', g: 30 });
+    Sound.play('select'); UI.toast('🏠 Home sweet home!');
+  },
   hearts() { const [X, Y] = Pw(this.u, this.v, 30); for (let k = 0; k < 8; k++) FX.texts.push({ X: X + rnd(-12, 12), Y: Y - rnd(0, 10), txt: '♥', life: 1.4, max: 1.4, col: '#ff6fa5' }); },
 
   // ---------------- drawing in the city ----------------
-  bucketize(buckets) {
+  drawMe(g, x, y, t) {
+    let look = this.look;
+    if (this.sick > 0.3) { look = { ...look, skinCol: mix(SKINS_L[look.skin] || SKINS_L[0], '#9fd35a', Math.min(0.8, this.sick / 5)) }; x += Math.sin(t * 12) * Math.min(1.5, this.sick * 0.3); }
+    if (this.burnT > 0.6) look = { ...look, skinCol: '#ff9a7a' };
+    if (this.inWater) {
+      g.save(); g.beginPath(); g.rect(x - 30, y - 80, 60, 79); g.clip();
+      drawAvatar(g, x, y + 7, look, this.moving ? this.phase : 0, this.face, 0.6); g.restore();
+      this.ripples(g, x, y, t, 7);
+    } else drawAvatar(g, x, y, look, this.moving ? this.phase : 0, this.face, 0.6);
+  },
+  ripples(g, x, y, t, r) {
+    g.strokeStyle = 'rgba(255,255,255,0.75)'; g.lineWidth = 0.8; g.beginPath(); g.ellipse(x, y - 0.5, r, r * 0.38, 0, 0, 7); g.stroke();
+    const ph = (t * 1.3) % 1; g.globalAlpha = 1 - ph; g.beginPath(); g.ellipse(x, y - 0.5, r + ph * 8, (r + ph * 8) * 0.38, 0, 0, 7); g.stroke(); g.globalAlpha = 1;
+  },
+  // name tag + bouncing arrow, always on top so you can find yourself
+  drawOnTop(g, t) {
     if (!this.walking) return;
+    const [x, y] = Pw(this.u, this.v), ty = y - 26 - Math.abs(Math.sin(t * 4)) * 2;
+    g.font = `700 5px ${SPRITE_FONT}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,0.95)';
+    g.strokeText(PERSONAL.mayor, x, ty - 4); g.fillStyle = '#e0457b'; g.fillText(PERSONAL.mayor, x, ty - 4);
+    g.fillStyle = '#ff6fa5'; g.strokeStyle = '#ffffff'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x - 3, ty - 2); g.lineTo(x + 3, ty - 2); g.lineTo(x, ty + 1.5); g.closePath(); g.fill(); g.stroke();
+  },
+  bucketize(buckets) {
     const add = (u, v, o) => { const d = Math.floor(u) + Math.floor(v); if (d >= 0 && d < buckets.length) buckets[d].push(o); };
+    const hm = this.home(); if (hm) add(hm.x + 0.5, hm.y + 0.5, { life: 'homeflag', h: hm });
+    if (!this.walking) return;
     add(this.u, this.v, { life: 'me' });
     add(this.moe.u, this.moe.v, { life: 'moe' });
     for (const c of this.coins) add(c.u, c.v, { life: 'coin', c });
-    const h = this.home(); if (h) add(h.x + 0.5, h.y + 0.5, { life: 'homeflag', h });
   },
   drawItem(P, it, night, t) {
     const g = P.g;
     if (it.life === 'me') {
       const [x, y] = Pw(this.u, this.v);
-      drawAvatar(g, x, y, this.look, this.moving ? this.phase : 0, this.face, 1.25);
-      g.font = `700 6px ${SPRITE_FONT}`; g.textAlign = 'center'; g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,0.9)'; g.strokeText(PERSONAL.mayor, x, y - 41); g.fillStyle = '#e0457b'; g.fillText(PERSONAL.mayor, x, y - 41);
+      this.drawMe(g, x, y, t);
     } else if (it.life === 'moe') {
-      const [x, y] = Pw(this.moe.u, this.moe.v);
-      drawMoe(P, x, y, 1.8, this.u < this.moe.u || this.face === 'left', this.moving ? Math.sin(this.phase * 1.3) * 1.5 : 0, this.moeLook);
+      const [x, y] = Pw(this.moe.u, this.moe.v), mi = idx(clamp(Math.floor(this.moe.u), 0, N - 1), clamp(Math.floor(this.moe.v), 0, N - 1));
+      const swim = W.terrain[mi] === T_WATER && !W.road[mi] && SEASON !== 'winter';
+      if (swim) { g.save(); g.beginPath(); g.rect(x - 30, y - 60, 60, 59); g.clip(); }
+      drawMoe(P, x, y + (swim ? 4 : 0), 0.95, this.u < this.moe.u || this.face === 'left', this.moving ? Math.sin(this.phase * 1.3) * 1.5 : 0, this.moeLook);
+      if (swim) { g.restore(); this.ripples(g, x, y, t, 5); }
     } else if (it.life === 'coin') {
       const [x, y] = Pw(it.c.u, it.c.v, 5 + Math.sin(t * 4 + it.c.u) * 1.5), w = Math.abs(Math.cos(t * 3 + it.c.v)) * 3 + 0.6;
       g.fillStyle = '#ffd23f'; g.strokeStyle = '#c99a00'; g.lineWidth = 0.7; g.beginPath(); g.ellipse(x, y, w, 3.4, 0, 0, 7); g.fill(); g.stroke();
@@ -319,7 +403,7 @@ const Life = {
 
 // ---------------- character drawing (used in the city, the shop and the room) ----------------
 function drawAvatar(g, x, y, look, phase, face, s = 1) {
-  const L = look, skin = SKINS_L[L.skin] || SKINS_L[0], hair = HAIRS[L.hair] || HAIRS[0], it = L.outfit ? ITEMS[L.outfit] : null;
+  const L = look, skin = L.skinCol || SKINS_L[L.skin] || SKINS_L[0], hair = HAIRS[L.hair] || HAIRS[0], it = L.outfit ? ITEMS[L.outfit] : null;
   const shirt = L.shirt || '#ff6fa5', back = face === 'up', flip = face === 'left';
   g.save(); g.translate(x, y); g.scale(flip ? -s : s, s);
   g.fillStyle = 'rgba(0,0,0,0.18)'; g.beginPath(); g.ellipse(0, 0, 6, 2.5, 0, 0, 7); g.fill();

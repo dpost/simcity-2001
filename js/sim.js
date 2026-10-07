@@ -108,7 +108,7 @@ function computeStats() {
   for (const b of W.buildings.values()) {
     c.types[b.type] = (c.types[b.type] || 0) + 1;
     const t = BT[b.type];
-    if (t) { if (t.park) c.parks++; if (t.power) c.plants++; if (t.landmark) c.landmarks++; continue; }
+    if (t) { if (t.park) c.parks++; if (t.power) c.plants++; if (t.landmark) c.landmarks++; if (t.jobs) jI += t.jobs * (b.powered ? 1 : 0.4); continue; }
     c[b.type]++; if (b.level === 3) c.lvl3++;
     const cap = ZONES[b.type].cap[b.level] * (b.powered ? 1 : 0.4);
     if (b.type === 'R') {
@@ -164,6 +164,7 @@ function growthStep() {
       if (!b || b.type !== zk) continue;
       if (!b.powered) { D.needs[i] = 2; S.needPower++; continue; }
       if (b.level >= 3 || dem < 0.05 || upgraded >= 5) continue;
+      if (b.id === Life.homeId) continue; // Nelly's own home stays exactly the way she bought it
       if (canLevelUp(b, i) && Math.random() < 0.03 + 0.08 * dem) {
         b.level++; b.variant = Math.floor(Math.random() * 1000); b.born = now; upgraded++;
         D.dirty = D.lvDirty = true; FX.construct(b, true);
@@ -212,13 +213,7 @@ function monthTick() {
     if (W.money < 0 && !W.flags.brokeWarned) { W.flags.brokeWarned = true; UI.say('We spent more than we have! Try raising taxes a little (💰 Budget) or bulldoze things we do not need.', 'dog'); }
     if (W.money > 0) W.flags.brokeWarned = false;
   }
-  W.month++;
-  if (W.month >= 12) W.month = 0;
-  if (setSeason(seasonOf(W.month))) {
-    const se = SEASONS[SEASON], line = { winter: 'Snow is falling! Bundle up!', spring: 'Flowers are blooming everywhere!', summer: 'Sunny days! Time for the pool!', autumn: 'The leaves are turning orange and red!' }[SEASON];
-    UI.toast(`${se.icon} ${se.name} is here! ${line}`);
-  }
-  if (W.month === 0) { W.year++; UI.toast(`🎆 Happy New Year ${W.year}!`); FX.fireworksShow(6, 4); }
+  W.month = (W.month + 1) % 12;
   News.monthly();
   Dis.monthly();
   Life.payday();
@@ -242,6 +237,17 @@ function checkTier() {
 }
 
 // time of day helpers
+// seasons run on real play time (5 minutes each) and wait politely while a disaster is happening
+function updateSeasons(dt) {
+  W.seasonT = (W.seasonT || 0) + dt;
+  const se = seasonByT(W.seasonT);
+  if (se !== SEASON && !Dis.active() && setSeason(se)) {
+    const s = SEASONS[SEASON], line = { winter: 'Snow is falling! Bundle up!', spring: 'Flowers are blooming everywhere!', summer: 'Sunny days! Time for the pool!', autumn: 'The leaves are turning orange and red!' }[SEASON];
+    UI.toast(`${s.icon} ${s.name} is here! ${line}`);
+    const y = Math.floor(W.seasonT / (SEASON_SECONDS * 4)) + 1;
+    if (y > W.year) { W.year = y; UI.toast(`🎆 Happy New Year! Welcome to Year ${W.year}!`); FX.fireworksShow(10, 5); }
+  }
+}
 function sunHeight() { return -Math.cos(W.tod * Math.PI * 2); }
 function nightFactor() {
   if (!W.terrain) return 0;

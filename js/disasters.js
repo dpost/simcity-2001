@@ -7,7 +7,7 @@
 const DISASTERS = {
   fire: { icon: '🔥', name: 'Fire', desc: 'Click a building to set it on fire. Fire stations nearby put fires out!', aim: true },
   tornado: { icon: '🌪️', name: 'Tornado', desc: 'Click where the tornado should start. It wanders around smashing things!', aim: true },
-  tsunami: { icon: '🌊', name: 'Tsunami', desc: 'A giant wave rushes out of the rivers and lakes. Homes by the water beware!' },
+  tsunami: { icon: '🌊', name: 'Tsunami', desc: 'A giant wall of water rises from the edge of the island and rolls across the city!' },
   meltdown: { icon: '☢️', name: 'Nuclear Meltdown', desc: 'Your nuclear plant explodes and leaves a glowing radiation zone for years. Needs a Nuclear Plant.' },
 };
 const RUBBLE_MONTHS = 6, RAD_MONTHS = 30;
@@ -31,7 +31,7 @@ const Dis = {
   active() { return this.fire.size > 0 || !!this.tornado || !!this.wave; },
 
   // ---------------- helpers ----------------
-  canBurn(b) { const t = BT[b.type]; return !(t && (t.landmark || t.isTree)); },
+  canBurn(b) { const t = BT[b.type]; return !(t && (t.landmark || t.isTree)) && b.id !== Life.homeId; },
   destroy(b, months = RUBBLE_MONTHS) {
     if (!W.buildings.has(b.id)) return;
     this.fire.delete(b.id);
@@ -63,11 +63,11 @@ const Dis = {
       return true;
     }
     if (kind === 'tsunami') {
-      const dist = this.waterDistance(5);
-      if (!dist) { UI.toast('🌊 No water nearby, so the tsunami fizzled out!'); return false; }
-      this.wave = { t: 0, dur: 12, max: 4.5, dist, hit: false };
-      Sound.play('wave');
-      this.say('🌊 TSUNAMI! A giant wave is coming out of the water! Homes near the shore are in danger!');
+      const axis = Math.random() < 0.5 ? 'u' : 'v';
+      this.wave = { axis, f: -4, reach: rnd(13, 19), phase: 'in', H: 10, t: 0, hitCol: -1 };
+      Sound.play('wave'); Game.shake = 1;
+      this.say('🌊 TSUNAMI! A giant wall of water is rising from the edge of the island! Run for high ground!');
+      if (axis === 'u') centerOnTile(9, N / 2); else centerOnTile(N / 2, 9);
       return true;
     }
     if (kind === 'meltdown') {
@@ -157,26 +157,56 @@ const Dis = {
       if (Game.visible(x, y, 3)) for (let k = 0; k < 2; k++) { const [X, Y] = Pw(tn.u, tn.v, 0); FX.parts.push({ X: X + rnd(-20, 20), Y: Y - rnd(0, 10), vx: rnd(-30, 30), vy: rnd(-60, -20), r: rnd(1.5, 3), life: 1, max: 1, col: '#8a7a6a', kind: 'smoke', grow: 2 }); }
       if (tn.life <= 0) { this.tornado = null; this.say('The tornado is gone! Rubble will clear by itself, or you can build right over it.'); }
     }
-    // tsunami
+    // tsunami: a wall of water rolls in from the island's edge, then drains back
     const wv = this.wave;
     if (wv) {
       wv.t += gdt;
-      const lvl = this.waveLevel();
-      if (!wv.hit && wv.t > wv.dur * 0.45) {
-        wv.hit = true;
-        for (const b of [...W.buildings.values()]) {
-          if (!this.canBurn(b)) continue;
-          const d = wv.dist[idx(b.x, b.y)];
-          if (d !== 255 && d > 0 && d <= wv.max && Math.random() < (1 - d / (wv.max + 1.5)) * 0.9) this.destroy(b);
-        }
-        for (let i = 0; i < N * N; i++) if (W.tree[i] && wv.dist[i] <= 2 && wv.dist[i] > 0 && Math.random() < 0.5) W.tree[i] = 0;
-        Game.shake = 2; D.lvDirty = true;
+      if (wv.phase === 'in') {
+        wv.H = Math.min(95, wv.H + gdt * 32);
+        wv.f += gdt * (wv.f < 0 ? 1.6 : 2.4);
+        while (wv.hitCol < Math.floor(wv.f) && wv.hitCol < N - 1) { wv.hitCol++; if (wv.hitCol >= 0) this.waveHit(wv.hitCol); }
+        Game.shake = Math.max(Game.shake, 0.7);
+        if (wv.f >= wv.reach) { wv.phase = 'out'; }
+        if (Math.random() < 0.8) { const k = Math.random() * N, [X, Y] = wv.axis === 'u' ? Pw(wv.f + 0.3, k, wv.H) : Pw(k, wv.f + 0.3, wv.H); for (let q = 0; q < 3; q++) FX.parts.push({ X, Y, vx: rnd(-20, 20), vy: rnd(-40, -10), r: rnd(1.5, 3), life: 0.8, max: 0.8, col: '#f2fbff', kind: 'spark', g: 60 }); }
+        this.sfxT -= dt; if (this.sfxT < 0) { this.sfxT = 4; Sound.play('wave'); }
+      } else {
+        wv.H = Math.max(0, wv.H - gdt * 18);
+        wv.f -= gdt * 1.8;
+        if (wv.f <= -1) { this.wave = null; D.lvDirty = true; this.say('The water drained back into the sea. Time to rebuild! Tip: tall buildings survive big waves better than little houses.'); }
       }
-      if (wv.t >= wv.dur) { this.wave = null; this.say('The water is going back to normal. Time to rebuild! Tip: parks by the water are safer than houses.'); }
-      void lvl;
     }
   },
-  waveLevel() { const w = this.wave; if (!w) return 0; const k = w.t / w.dur; return w.max * (k < 0.45 ? smoothstep(0, 0.45, k) : 1 - smoothstep(0.55, 1, k)); },
+  waveHit(col) {
+    const wv = this.wave;
+    for (let k = 0; k < N; k++) {
+      const [x, y] = wv.axis === 'u' ? [col, k] : [k, col], i = idx(x, y), b = buildingAt(x, y);
+      if (b && this.canBurn(b)) {
+        const ch = BT[b.type] ? (BT[b.type].park ? 0.25 : 0.45) : [0, 0.8, 0.5, 0.2][b.level];
+        if (Math.random() < ch) this.destroy(b);
+      }
+      if (W.tree[i] && Math.random() < 0.6) { W.tree[i] = 0; D.lvDirty = true; }
+    }
+    for (const c of Ents.cars) { const [cu, cv] = Ents.moverPos(c, 0.15); if (Math.abs((wv.axis === 'u' ? cu : cv) - col) < 1) c.life = -1; }
+  },
+  flooded(x, y) { const w = this.wave; if (!w) return false; const c = w.axis === 'u' ? x : y; return c + 0.5 < w.f; },
+  bucketize(buckets) {
+    const w = this.wave; if (!w || w.H < 1) return;
+    for (let k = 0; k < N; k++) { const d = clamp(Math.floor(w.f) + k, 0, buckets.length - 1); buckets[d].push({ wave: true, k }); }
+  },
+  drawWaveSeg(P, k, t) {
+    const w = this.wave, g = P.g, H = w.H * (0.85 + 0.15 * Math.sin(t * 3 + k * 0.7)), c = 0.5;
+    const at = (a, b, z) => (w.axis === 'u' ? Pw(a, b, z) : Pw(b, a, z));
+    const A = at(w.f, k, 0), B = at(w.f, k + 1, 0), B2 = at(w.f + c, k + 1, H), A2 = at(w.f + c, k, H);
+    const gr = g.createLinearGradient(0, Math.min(A2[1], B2[1]), 0, Math.max(A[1], B[1]));
+    gr.addColorStop(0, '#e9fbff'); gr.addColorStop(0.25, '#7fd0f5'); gr.addColorStop(1, '#1f6fb0');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(...A); g.lineTo(...B); g.lineTo(...B2); g.lineTo(...A2); g.closePath(); g.fill();
+    const L1 = at(w.f + c + 0.35, k, H - 22), L2 = at(w.f + c + 0.35, k + 1, H - 22);
+    g.fillStyle = 'rgba(200,240,255,0.95)'; g.beginPath(); g.moveTo(...A2); g.lineTo(...B2); g.lineTo(...L2); g.lineTo(...L1); g.closePath(); g.fill();
+    g.strokeStyle = '#ffffff'; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath(); g.moveTo(...A2); g.lineTo(...B2); g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(...L1); g.lineTo(...L2); g.stroke();
+    g.fillStyle = 'rgba(255,255,255,0.9)';
+    for (let q = 0; q < 3; q++) { const s = (q + 0.5) / 3, x = lerp(A2[0], B2[0], s), y = lerp(A2[1], B2[1], s) - 1 - Math.abs(Math.sin(t * 5 + k + q)) * 3; g.beginPath(); g.arc(x, y, 1.6, 0, 7); g.fill(); }
+  },
 
   monthly() {
     let ch = false;
@@ -190,20 +220,20 @@ const Dis = {
     const chance = { easy: 0.012, normal: 0.02, hard: 0.035 }[W.difficulty] || 0.015;
     if (Math.random() > chance) return;
     const opts = ['fire', 'fire', 'fire', 'tornado'];
-    if (W.terrain.some((t) => t === T_WATER)) opts.push('tsunami');
+    opts.push('tsunami');
     if ([...W.buildings.values()].some((b) => b.type === 'nuclear')) opts.push('meltdown');
     this.start(pick(opts), -1, -1);
   },
 
   // ---------------- drawing ----------------
   drawGround(g, t, u0, u1, v0, v1) {
-    const lvl = this.waveLevel(), wv = this.wave;
+    const wv = this.wave;
     for (let y = v0; y <= v1; y++) for (let x = u0; x <= u1; x++) {
       const i = idx(x, y);
       if (this.rad[i]) { diamondPath(g, x, y); g.fillStyle = `rgba(120,255,60,${0.18 + Math.sin(t * 2 + x * 0.7 + y) * 0.07 + Math.min(0.2, this.rad[i] / 100)})`; g.fill(); }
-      if (wv) {
-        const d = wv.dist[i];
-        if (d !== 255 && d > 0 && d <= lvl + 0.3) { diamondPath(g, x, y); g.fillStyle = `rgba(60,150,220,${clamp(lvl - d + 0.7, 0.2, 0.8)})`; g.fill(); if (d > lvl - 0.9) { const [fx, fy] = Pw(x + 0.5, y + 0.5); g.fillStyle = 'rgba(255,255,255,0.75)'; g.beginPath(); g.ellipse(fx + Math.sin(t * 6 + x) * 4, fy, 12, 4, 0, 0, 7); g.fill(); } }
+      if (wv && this.flooded(x, y)) {
+        diamondPath(g, x, y); g.fillStyle = `rgba(50,140,215,${wv.phase === 'in' ? 0.72 : 0.55})`; g.fill();
+        if (((x * 7 + y * 3 + Math.floor(t * 3)) % 5) === 0) { const [fx, fy] = Pw(x + 0.5, y + 0.5); g.strokeStyle = 'rgba(255,255,255,0.5)'; g.lineWidth = 1; g.beginPath(); g.ellipse(fx, fy, 8, 3, 0, 0, 7); g.stroke(); }
       }
     }
   },

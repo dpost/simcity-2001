@@ -96,6 +96,9 @@ const Sound = {
       case 'wave': Nz(5, { freq: 300, freqEnd: 1600, vol: 0.4, attack: 1.5 }); Nz(3, { freq: 2000, freqEnd: 400, vol: 0.15, when: 2.5 }); break;
       case 'crackle': for (let k = 0; k < 4; k++) Nz(0.04, { filter: 'highpass', freq: 2500, vol: 0.05, when: Math.random() * 0.5 }); break;
       case 'alarm': for (let k = 0; k < 4; k++) T(520, 0.3, { type: 'sawtooth', vol: 0.06, when: 0.5 + k * 0.5, slide: 0.8 }); break;
+      case 'splash': Nz(0.5, { filter: 'bandpass', freq: 1400, freqEnd: 500, q: 0.7, vol: 0.3 }); T(300, 0.15, { vol: 0.08, slide: 0.5 }); break;
+      case 'ouch': T(700, 0.25, { type: 'square', vol: 0.07, slide: 0.5 }); break;
+      case 'barf': Nz(0.5, { freq: 500, freqEnd: 150, q: 4, vol: 0.25 }); T(180, 0.45, { type: 'sawtooth', vol: 0.06, slide: 0.5 }); break;
       case 'cash': T(1568, 0.08, { type: 'square', vol: 0.05 }); T(2093, 0.3, { type: 'square', vol: 0.05, when: 0.08 }); break;
     }
   },

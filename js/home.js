@@ -44,6 +44,7 @@ const FURN = {
   cattower(F) { F.box(0.4, 0.4, 0.6, 0.6, 0, 46, '#e6d4b8'); F.box(0.1, 0.1, 0.9, 0.9, 0, 4, '#b48cff'); F.box(0.15, 0.2, 0.7, 0.75, 22, 25, '#b48cff'); F.box(0.25, 0.25, 0.85, 0.85, 46, 49, '#b48cff'); },
   telescope(F) { const [x, y] = F.pt(0.5, 0.5, 0), g = F.g; F.P.line([x, y - 22], [x - 8, y], '#555', 1.5); F.P.line([x, y - 22], [x + 8, y], '#555', 1.5); F.P.line([x, y - 22], [x, y + 3], '#555', 1.5); g.save(); g.translate(x, y - 24); g.rotate(-0.6); g.fillStyle = '#f2f2f2'; g.fillRect(-14, -3.5, 28, 7); g.fillStyle = '#3f6fd8'; g.fillRect(10, -4, 4, 8); g.restore(); },
   robot(F, t) { const [x, y0] = F.pt(0.5, 0.5, 0), y = y0 - Math.abs(Math.sin(t * 3)) * 3, g = F.g; g.fillStyle = '#c9ced6'; g.fillRect(x - 7, y - 18, 14, 14); g.fillStyle = '#e8ecf2'; g.fillRect(x - 6, y - 30, 12, 11); g.fillStyle = '#5ce1e6'; g.fillRect(x - 4, y - 27, 3, 3); g.fillRect(x + 1, y - 27, 3, 3); F.P.line([x, y - 30], [x, y - 36], '#888', 1); F.P.circle(x, y - 37, 1.6, Math.sin(t * 5) > 0 ? '#ff3030' : '#ffd23f'); g.fillStyle = '#7d8590'; g.fillRect(x - 6, y - 4, 4, 4); g.fillRect(x + 2, y - 4, 4, 4); },
+  chocofountain(F, t) { F.box(0.25, 0.25, 0.75, 0.75, 0, 6, '#e8e8f0'); const [x, y] = F.pt(0.5, 0.5, 6), g = F.g; for (const [r, h] of [[10, 0], [7, 8], [4, 15]]) { g.fillStyle = '#7a4b2a'; g.beginPath(); g.ellipse(x, y - h, r, r / 2, 0, 0, 7); g.fill(); } g.strokeStyle = '#8b5a3c'; g.lineWidth = 2; for (let k = 0; k < 3; k++) { const o = (t * 12 + k * 4) % 12; g.beginPath(); g.moveTo(x - 4 + k * 4, y - 15); g.lineTo(x - 5 + k * 5, y - 15 + o); g.stroke(); } F.P.circle(x, y - 22, 2.5, '#e8283c'); },
   disco(F, t) { const [x, y] = F.pt(0.5, 0.5, 105), g = F.g; F.P.line([x, y - 20], [x, y - 8], '#999', 1); const gr = g.createRadialGradient(x - 3, y - 3, 1, x, y, 9); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#9aa3ad'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); g.globalCompositeOperation = 'lighter'; for (let k = 0; k < 6; k++) { const a = t * 1.5 + k; const [fx, fy] = F.pt(0.5 + Math.cos(a) * 2.5, 0.5 + Math.sin(a) * 2.5, 0); g.fillStyle = `hsla(${k * 60},90%,65%,0.35)`; g.beginPath(); g.ellipse(fx, fy, 9, 4.5, 0, 0, 7); g.fill(); } g.globalCompositeOperation = 'source-over'; },
 };
 
@@ -156,9 +157,9 @@ const Home = {
     // pets & me
     const dogbed = Life.room.items.find((o) => o.id === 'dogbed'), tower = Life.room.items.find((o) => o.id === 'cattower');
     if (dogbed) { const [x, y] = P.iso(dogbed.x + 0.5, dogbed.y + 0.5, 4); P.ellipse(x, y - 4, 13, 7, PERSONAL.dogColors.fur, 'rgba(0,0,0,0.25)'); P.circle(x + 9, y - 8, 6, PERSONAL.dogColors.fur, 'rgba(0,0,0,0.25)'); P.ellipse(x + 8, y - 8, 2.5, 4.5, PERSONAL.dogColors.ears); g.fillStyle = '#333'; g.font = '8px sans-serif'; g.fillText('z', x + 14, y - 18 - Math.sin(t * 2) * 3); }
-    else drawMoe(P, ...P.iso(6.2, 6.8), 2.4, true, 0, Life.moeLook);
+    else drawMoe(P, ...P.iso(6.2, 6.8), 1.5, true, 0, Life.moeLook);
     if (tower) { const [x, y] = P.iso(tower.x + 0.55, tower.y + 0.55, 49); P.cat(x, y, 1.4); }
-    drawAvatar(g, ...P.iso(6.8, 6.2), Life.look, 0, 'down', 2.6);
+    drawAvatar(g, ...P.iso(6.8, 6.2), Life.look, 0, 'down', 1.35);
     // ghost of what you're holding
     if (this.holding && this.hover) {
       const [w, d] = this.dims(this.holding, this.rot), x = Math.round(this.hover[0] - w / 2), y = Math.round(this.hover[1] - d / 2), ok = this.fits(this.holding, x, y, this.rot);

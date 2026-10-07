@@ -32,11 +32,13 @@ const News = {
     'The {city} Marching Band has learned a new song. The neighbors have learned earplugs.',
     'Sneaky raccoon caught borrowing donuts. Says it will "definitely bring them back."',
     '{cat} has been named Official Nap Inspector. He takes the job very seriously.',
+    'The chocolate factory smells SO good today that three people walked into a lamp post.',
+    '{grandma} says her chocolate chip cookies are still better than the factory ones. She is right.',
     'Sports: {city} wins the regional Hide and Seek championship. Team still has not been found.',
   ],
   fill(s) {
     return s.replace(/\{city\}/g, W.cityName || PERSONAL.defaultCityName).replace(/\{mayor\}/g, PERSONAL.mayor).replace(/\{dog\}/g, PERSONAL.dog)
-      .replace(/\{cat\}/g, PERSONAL.cat).replace(/\{dad\}/g, PERSONAL.dad).replace(/\{n1\}/g, NICK1).replace(/\{n2\}/g, NICK2);
+      .replace(/\{cat\}/g, PERSONAL.cat).replace(/\{dad\}/g, PERSONAL.dad).replace(/\{grandma\}/g, PERSONAL.grandma).replace(/\{n1\}/g, NICK1).replace(/\{n2\}/g, NICK2);
   },
   hint() {
     const c = S.counts || {};

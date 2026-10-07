@@ -6,6 +6,8 @@
 const SC = 2; // sprites are drawn at 2x so they stay crisp when zoomed in
 let SEASON = 'summer';
 const SEASONS = { spring: { icon: '🌸', name: 'Spring' }, summer: { icon: '☀️', name: 'Summer' }, autumn: { icon: '🍂', name: 'Autumn' }, winter: { icon: '❄️', name: 'Winter' } };
+const SEASON_ORDER = ['spring', 'summer', 'autumn', 'winter'];
+const seasonByT = (t) => SEASON_ORDER[Math.floor(t / SEASON_SECONDS) % 4];
 const seasonOf = (month) => ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'][month] || 'summer';
 const GRASS_S = {
   spring: ['#92d86c', '#99dc72', '#8ed266', '#96d870'],
@@ -500,6 +502,13 @@ const ZART = {
         g.save(); g.translate(x, y - 12); g.fillStyle = '#c9ced6'; g.beginPath();
         for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, r = i % 2 ? 8 : 10; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.closePath(); g.fill(); g.strokeStyle = '#7d8590'; g.stroke();
         g.fillStyle = '#7fa7d9'; g.beginPath(); g.arc(0, 0, 3.5, 0, 7); g.fill(); g.restore();
+      } else if (d === 3) { // small chocolate workshop
+        p.cyl(0.78, 0.3, 0, 40, 4.5, '#7a4b2a'); p.band(0.78, 0.3, 30, 34, 4.5, '#ff8fb8');
+        p.box(0.1, 0.25, 0.7, 0.88, 0, 18, '#8b5a3c');
+        p.winsL(0.14, 0.66, 0.88, 4, 14, 3, 1, { col: '#ffd9a8' });
+        p.gable(0.1, 0.25, 0.7, 0.88, 18, 7, '#5a3a24', '#8b5a3c', 'u');
+        const [x, y] = p.iso(0.85, 0.75, 0); p.line([x, y], [x, y - 12], '#5a3a24', 1.2);
+        p.board(x, y - 17, 16, 9, '#5a2f1a', '🍫', '#fff', 6, { border: '#3a2010' });
       } else {
         p.box(0.1, 0.18, 0.62, 0.3, 0, 6, '#c08a4a'); p.box(0.66, 0.18, 0.8, 0.3, 0, 8, '#b07a40');
         p.box(0.08, 0.32, 0.92, 0.88, 0, 18, '#b8a48a');

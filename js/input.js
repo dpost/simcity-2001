@@ -114,6 +114,7 @@ const Input = {
       if (k === ' ') { e.preventDefault(); UI.setSpeed(Game.speed === 0 ? (Game.lastSpeed || 1) : 0); return; }
       const tb = TOOLBAR.find((t) => t.key === k);
       if (tb) { UI.clickTool(tb.id); return; }
+      if (k === 'h') UI.toggleXray();
       if (k === '+' || k === '=') zoomAt(R.w / 2, R.h / 2, 1.25);
       if (k === '-' || k === '_') zoomAt(R.w / 2, R.h / 2, 0.8);
     }
@@ -249,14 +250,14 @@ const Input = {
       let n = 0;
       if (this.tiles.length === 1) {
         const b = buildingAt(this.tiles[0][0], this.tiles[0][1]);
-        if (b && BT[b.type] && BT[b.type].landmark && this.confirmB !== b) {
+        if (b && ((BT[b.type] && BT[b.type].landmark) || b.id === Life.homeId) && this.confirmB !== b) {
           this.confirmB = b; setTimeout(() => { if (this.confirmB === b) this.confirmB = null; }, 3000);
           UI.toast(`Click again to bulldoze ${buildingName(b)}`); Sound.play('error'); return;
         }
       }
       for (const [x, y] of this.tiles) {
         const b = buildingAt(x, y);
-        if (b && BT[b.type] && BT[b.type].landmark && this.tiles.length > 1) continue;
+        if (b && ((BT[b.type] && BT[b.type].landmark) || b.id === Life.homeId) && this.tiles.length > 1) continue;
         const r = bulldoze(x, y);
         if (r && r.fail) { UI.toast('Not enough money to bulldoze!'); break; }
         if (r) { n++; if (r.b) { if (this.selected === r.b) { this.selected = null; UI.hideInfo(); } FX.construct(r.b); } }

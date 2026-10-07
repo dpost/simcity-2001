@@ -8,6 +8,7 @@ const PERSONAL = {
   dad: 'David',
   dog: 'Moe',                        // the Chief Advisor! (a white Pyrador)
   cat: 'Jason',
+  grandma: 'Nana',
   defaultCityName: 'Snortopolis',
   // Make Moe and Jason look like the real ones:
   dogColors: { fur: '#f8f5ee', ears: '#ece2d0', muzzle: '#ffffff', nose: '#2b1d14', outline: '#cfc6b6', collar: '#ff6fa5' },
@@ -22,8 +23,9 @@ const POSS = (name) => name + (/s$/i.test(name) ? "'" : "'s");
 // =====================================================================
 const N = 64;              // the map is N x N tiles
 const TW = 64, TH = 32;    // isometric tile size (pixels)
-const MONTH_SECONDS = 10;  // real seconds per game month at normal speed (a season = 30s)
+const MONTH_SECONDS = 10;  // real seconds per payday (taxes & salary) at normal speed
 const DAY_SECONDS = 150;   // real seconds for one full day + night
+const SEASON_SECONDS = 300; // each season lasts 5 real minutes of play (a year is 20 minutes)
 const START_MONEY = 25000;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -55,9 +57,9 @@ const ZKEY = [null, 'R', 'C', 'I'];
 const ZNAMES = {
   R: [null, ['Cozy Cottage', 'Square House', 'House with a Doghouse', 'Tall Skinny House'], ['Townhouses', 'Apartment House', 'Flower Flats'], ['Sky Apartments', 'Terrace Tower', 'Glass Tower Homes']],
   C: [null, ['Ice Cream Shop', 'Bakery', 'Pet Shop', 'Candy Shop', 'Pizza Place'], ['Snack Mart', 'Shopping Plaza', 'Book Café'], ['Glass Office Tower', 'Mega Mall', 'Tech Tower']],
-  I: [null, ['Workshop', 'Robot Workshop', 'Warehouse'], ['Candy Factory', 'Chocolate Factory', 'Gadget Factory'], ['Rocket Parts Plant', 'Big Factory', 'Science Lab']],
+  I: [null, ['Workshop', 'Robot Workshop', 'Warehouse', 'Chocolate Workshop'], ['Candy Factory', 'Chocolate Factory', 'Gadget Factory'], ['Rocket Parts Plant', 'Big Factory', 'Science Lab']],
 };
-const ZDESIGNS = { R: [0, 4, 3, 3], C: [0, 5, 3, 3], I: [0, 3, 3, 3] };
+const ZDESIGNS = { R: [0, 4, 3, 3], C: [0, 5, 3, 3], I: [0, 4, 3, 3] };
 const ZHEIGHT = { R: [0, 50, 72, 150], C: [0, 62, 72, 175], I: [0, 50, 110, 120] };
 
 // =====================================================================
@@ -92,6 +94,7 @@ const BT = {
   school: { name: 'School', icon: '🏫', cat: 'services', size: 2, cost: 1500, upkeep: 60, tier: 1, ground: 'grass', h: 60, svc: 'school', lv: { r: 12, a: 12 }, desc: 'Smart kids grow up to build taller towers!' },
   hospital: { name: 'Hospital', icon: '🏥', cat: 'services', size: 2, cost: 3000, upkeep: 80, tier: 2, ground: 'pave', h: 80, svc: 'health', lv: { r: 14, a: 12 }, desc: 'Keeps everyone healthy and happy.' },
   // ---- fun places (build as many as you like) ----
+  chocofactory: { name: 'Chocolate Factory', icon: '🍫', cat: 'fun', size: 2, cost: 3000, upkeep: 0, tier: 0, ground: 'pave', h: 110, jobs: 45, tourism: 30, lv: { r: 5, a: 6 }, desc: 'A chocolate waterfall, candy pipes and 45 yummy jobs! You can visit it when you walk around.' },
   market: { name: 'Farmers Market', icon: '🍎', cat: 'fun', size: 1, cost: 500, upkeep: 0, tier: 1, ground: 'pave', h: 40, tourism: 15, lv: { r: 5, a: 10 }, desc: 'Fresh fruit and veggies. Brings shoppers and visitors.' },
   cinema: { name: 'Movie Theater', icon: '🎬', cat: 'fun', size: 1, cost: 1500, upkeep: 0, tier: 1, ground: 'pave', h: 55, tourism: 40, lv: { r: 6, a: 10 }, desc: 'Popcorn and movies, with blinking lights at night!' },
   ferris: { name: 'Ferris Wheel', icon: '🎡', cat: 'fun', size: 2, cost: 4000, upkeep: 0, tier: 2, ground: 'pave', h: 110, tourism: 70, lv: { r: 7, a: 16 }, desc: 'A giant spinning wheel. The view from the top is amazing!' },
@@ -121,6 +124,6 @@ const TOOLBAR = [
   { id: 'power', icon: '⚡', label: 'Power', key: '7', group: ['wind', 'coal', 'solar', 'fusion'] },
   { id: 'parks', icon: '🌳', label: 'Parks', key: '8', group: ['tree', 'park', 'garden', 'pond', 'sign', 'playground', 'fountain', 'basketball', 'icerink', 'field', 'pool', 'bigpark'] },
   { id: 'services', icon: '🚒', label: 'Services', key: '9', group: ['police', 'fire', 'busstop', 'library', 'clinic', 'school', 'hospital'] },
-  { id: 'fun', icon: '🎡', label: 'Fun', key: 'q', group: ['market', 'cinema', 'ferris', 'museum', 'stadium'] },
+  { id: 'fun', icon: '🎡', label: 'Fun', key: 'q', group: ['chocofactory', 'market', 'cinema', 'ferris', 'museum', 'stadium'] },
   { id: 'landmarks', icon: '⭐', label: 'Landmarks', key: '0', group: ['dogpark', 'donut', 'catcafe', 'cupcake', 'observatory', 'zoo', 'space', 'statue', 'castle', 'skytower'] },
 ];
