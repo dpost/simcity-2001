@@ -186,6 +186,18 @@ function overlayColor(mode, i) {
     if (!(W.road[i] || W.zone[i] || W.bld[i] >= 0)) return null;
     return D.powered[i] ? 'rgba(255,225,0,0.5)' : 'rgba(255,50,50,0.5)';
   }
+  if (mode === 'growth') {
+    const z = W.zone[i]; if (!z) return null;
+    const bid = W.bld[i];
+    if (bid < 0) return D.roadNear[i] && D.powered[i] ? 'rgba(120,230,120,0.35)' : 'rgba(255,60,60,0.55)';
+    const b = W.buildings.get(bid);
+    if (!b || BT[b.type]) return null;
+    if (b.level >= 3) return 'rgba(170,110,255,0.6)';
+    if (!b.powered) return 'rgba(255,60,60,0.55)';
+    const L = b.level + 1;
+    if (W.tier < ZONES[b.type].tierReq[L]) return 'rgba(90,140,230,0.5)';
+    return canLevelUp(b, i) ? 'rgba(60,220,90,0.6)' : 'rgba(255,160,40,0.6)';
+  }
   if (mode === 'happy') {
     const v = D.lv[i] / 100;
     return v < 0.5 ? `rgba(255,${Math.round(80 + v * 2 * 170)},60,0.45)` : `rgba(${Math.round(255 - (v - 0.5) * 2 * 200)},230,70,0.45)`;

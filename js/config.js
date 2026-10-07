@@ -38,10 +38,17 @@ const TIERS = [
 
 const ROAD_COST = 10, BRIDGE_COST = 60, ZONE_COST = 10, CLEAR_TREE_COST = 5;
 
+// money: starting cash · income: taxes & tourism multiplier · cost: price multiplier
+const DIFFICULTY = {
+  easy: { name: 'Easy', icon: '🌱', money: 25000, income: 1, cost: 1, reward: 1, desc: 'Lots of money. Relaxed building.' },
+  normal: { name: 'Normal', icon: '⭐', money: 15000, income: 0.5, cost: 1.3, reward: 0.6, desc: 'Money is tight. Plan carefully!' },
+  hard: { name: 'Hard', icon: '🔥', money: 9000, income: 0.36, cost: 1.6, reward: 0.45, desc: 'Every dollar counts. For master mayors.' },
+};
+
 // Zones grow buildings by themselves. cap = people (homes) or jobs (shops/factories) per level.
 const ZONES = {
-  R: { id: 1, name: 'Homes', icon: '🏠', color: '#3ecf5a', cap: [0, 8, 30, 100], lvReq: [0, 0, 36, 54], tierReq: [0, 0, 0, 1] },
-  C: { id: 2, name: 'Shops', icon: '🍦', color: '#3fa9f5', cap: [0, 5, 16, 45], lvReq: [0, 0, 33, 50], tierReq: [0, 0, 0, 1] },
+  R: { id: 1, name: 'Homes', icon: '🏠', color: '#3ecf5a', cap: [0, 8, 30, 100], lvReq: [0, 0, 35, 50], tierReq: [0, 0, 0, 1] },
+  C: { id: 2, name: 'Shops', icon: '🍦', color: '#3fa9f5', cap: [0, 5, 16, 45], lvReq: [0, 0, 33, 48], tierReq: [0, 0, 0, 1] },
   I: { id: 3, name: 'Factories', icon: '🏭', color: '#ffb52e', cap: [0, 8, 20, 40], lvReq: [0, 0, 0, 0], tierReq: [0, 0, 1, 2] },
 };
 const ZKEY = [null, 'R', 'C', 'I'];

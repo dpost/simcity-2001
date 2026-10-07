@@ -163,7 +163,7 @@ function growthStep() {
       if (!b || b.type !== zk) continue;
       if (!b.powered) { D.needs[i] = 2; S.needPower++; continue; }
       if (b.level >= 3 || dem < 0.05 || upgraded >= 5) continue;
-      if (canLevelUp(b, i) && Math.random() < 0.015 + 0.05 * dem) {
+      if (canLevelUp(b, i) && Math.random() < 0.03 + 0.08 * dem) {
         b.level++; b.variant = Math.floor(Math.random() * 1000); b.born = now; upgraded++;
         D.dirty = D.lvDirty = true; FX.construct(b, true);
       }
@@ -190,9 +190,10 @@ function computeBudget() {
     if (t.power) pw += t.upkeep || 0; else svc += t.upkeep || 0;
     if (t.tourism) tour += t.tourism;
   }
-  S.taxR = Math.round(S.pop * 0.16 * W.taxRate);
-  S.taxB = Math.round((S.jobsC + S.jobsI) * 0.22 * W.taxRate);
-  S.tourism = tour; S.upkeepSvc = svc; S.upkeepPower = pw; S.upkeepRoads = Math.round(D.roadList.length * 0.25);
+  const inc = diff().income, cm = diff().cost;
+  S.taxR = Math.round(S.pop * 0.16 * W.taxRate * inc);
+  S.taxB = Math.round((S.jobsC + S.jobsI) * 0.22 * W.taxRate * inc);
+  S.tourism = Math.round(tour * inc); S.upkeepSvc = Math.round(svc * cm); S.upkeepPower = Math.round(pw * cm); S.upkeepRoads = Math.round(D.roadList.length * 0.25 * cm);
   S.income = S.taxR + S.taxB + S.tourism;
   S.expense = svc + pw + S.upkeepRoads;
   S.net = S.income - S.expense;
@@ -203,7 +204,7 @@ function monthTick() {
   if (W.mode !== 'creative') {
     W.money += S.net;
     if (S.net > 0 && S.pop > 0) FX.taxCoins(S.net);
-    if (W.money < 300 && S.net <= 50 && S.pop < 300 && !W.flags.allowanceGiven) {
+    if (W.difficulty !== 'hard' && W.money < 300 && S.net <= 50 && S.pop < 300 && !W.flags.allowanceGiven) {
       W.flags.allowanceGiven = true; W.money += 3000;
       UI.say(`Uh oh, we're almost out of money! Good news: ${PERSONAL.dad} sent an emergency allowance of $3,000. Tip: more homes and shops = more taxes!`, 'dog');
     }

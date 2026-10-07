@@ -34,8 +34,8 @@ function enterPlay() {
   Game.autosaveT = 30;
 }
 
-function startNewGame({ name, mode, slot, seed }) {
-  newWorld({ seed, mode, cityName: name });
+function startNewGame({ name, mode, slot, seed, difficulty = 'normal' }) {
+  newWorld({ seed, mode, cityName: name, difficulty });
   if (mode === 'creative') W.tier = 0;
   resetSimState(); primeSim();
   Game.slot = slot;

@@ -6,7 +6,7 @@ const $ = (id) => document.getElementById(id);
 const CITY_NAMES = [PERSONAL.defaultCityName, `${NICK1} Bay`, `${PERSONAL.dog}ville`, `${PERSONAL.cat}burg`, 'Cupcake Falls', 'Sprinkle City', `New ${PERSONAL.mayor}`, `${NICK2} Springs`, 'Puppy Harbor', 'Starlight Hills', 'Marshmallow Meadows', `Port ${PERSONAL.mayor}`];
 const TIER_LINES = [
   '',
-  `We're a TOWN now! My Dog Park, schools, playgrounds and solar power are unlocked. Check ⭐ Landmarks!`,
+  `We're a TOWN now! Skyscrapers can grow now too, if the land is nice enough. My Dog Park, schools and playgrounds are unlocked. Check ⭐ Landmarks!`,
   `A real CITY! Hospitals, big parks, ${POSS(PERSONAL.cat)} Cat Café and the Giant Cupcake Tower are unlocked!`,
   `BIG CITY! The Space Center, the Zoo, the Observatory and Fusion power are ready. ROCKETS!!`,
   `METROPOLIS! You can build the Candy Castle... and a golden Statue of YOU!`,
@@ -83,7 +83,7 @@ const UI = {
       const info = document.createElement('div');
       info.innerHTML = `<div class="cn">${escapeHtml(bt.name)}</div><div class="cd">${escapeHtml(bt.desc)}</div>` +
         (locked ? `<div class="lk">🔒 Unlocks at ${TIERS[bt.tier].name} (${fmtNum(TIERS[bt.tier].pop)} people)</div>` : built ? '<div class="cc">✅ Built!</div>' :
-          `<div class="cc">${fmtMoney(bt.cost)}${bt.upkeep ? ` <span style="color:#8a7a99;font-weight:500">· ${fmtMoney(bt.upkeep)}/mo</span>` : ''}${bt.power ? ` · ⚡${bt.power}` : ''}${bt.tourism ? ` · 🎟️ +${fmtMoney(bt.tourism)}/mo` : ''}</div>`);
+          `<div class="cc">${fmtMoney(price(bt.cost))}${bt.upkeep ? ` <span style="color:#8a7a99;font-weight:500">· ${fmtMoney(price(bt.upkeep))}/mo</span>` : ''}${bt.power ? ` · ⚡${bt.power}` : ''}${bt.tourism ? ` · 🎟️ +${fmtMoney(bt.tourism)}/mo` : ''}</div>`);
       c.appendChild(info);
       c.addEventListener('click', () => {
         if (locked) { Sound.play('error'); this.toast(`🔒 Grow to a ${TIERS[bt.tier].name} to unlock this!`); return; }
@@ -115,7 +115,7 @@ const UI = {
   setOverlay(o) {
     Game.overlay = o;
     document.querySelectorAll('#overlayBtns button').forEach((b) => b.classList.toggle('on', (b.dataset.ov || null) === o));
-    const legend = { power: '⚡ Yellow = has power · Red = no power', happy: '😊 Green = lovely place to live · Red = not nice', poll: '🌫️ Brown = smoky air. Keep homes away!', safety: '🛡️ Blue = near police, fire, school or hospital' };
+    const legend = { growth: '🏗️ Purple = skyscraper! · Green = ready to grow · Orange = needs a nicer spot (parks, trees, school) · Blue = city must grow first · Red = no power/road', power: '⚡ Yellow = has power · Red = no power', happy: '😊 Green = lovely place to live · Red = not nice', poll: '🌫️ Brown = smoky air. Keep homes away!', safety: '🛡️ Blue = near police, fire, school or hospital' };
     $('overlayLegend').textContent = o ? legend[o] : '';
   },
 
@@ -183,7 +183,7 @@ const UI = {
     const el = $('questList'); el.innerHTML = '';
     for (const q of W.quest.active) {
       const d = document.createElement('div'); d.className = 'quest';
-      d.innerHTML = `<div class="qt"><span>${escapeHtml(q.title)}</span><span class="qr">${W.mode === 'creative' ? '' : '+' + fmtMoney(q.reward)}</span></div><div class="qbar"><div></div></div><div class="qn"></div>`;
+      d.innerHTML = `<div class="qt"><span>${escapeHtml(q.title)}</span><span class="qr">${W.mode === 'creative' ? '' : '+' + fmtMoney(Quests.rewardOf(q))}</span></div><div class="qbar"><div></div></div><div class="qn"></div>`;
       d.addEventListener('click', () => { Sound.play('click'); this.say(q.text, 'dog'); if (q.tool) this.clickTool(q.tool); });
       d._q = q; el.appendChild(d);
     }
@@ -215,7 +215,7 @@ const UI = {
     $('advisorImg').src = this.portraits[s.who];
     $('advisorName').textContent = s.who === 'cat' ? `${PERSONAL.cat} the Cat` : `${PERSONAL.dog}, Chief Advisor`;
     $('advisorText').textContent = s.text; this.current = s;
-    this.sayTimer = clamp(s.text.split(' ').length * 0.42, 6, 16);
+    this.sayTimer = s.tag ? 60 : clamp(s.text.split(' ').length * 0.75, 12, 28);
     Sound.play(s.who === 'cat' ? 'meow' : 'woof');
   },
 
@@ -374,6 +374,7 @@ const UI = {
   openMenu() {
     this.modal(`<h2>☰ Menu</h2><div class="menu-list">
       <button class="btn" data-m="save">💾 Save city now</button>
+      <button class="btn" data-m="download">📥 Download city file (to move to another computer)</button>
       <button class="btn" data-m="budget">💰 Budget &amp; taxes</button>
       <button class="btn" data-m="help">❓ How to play</button>
       <button class="btn" data-m="title">🏠 Save &amp; go to main menu</button>
@@ -382,6 +383,7 @@ const UI = {
       Sound.play('click');
       const m = b.dataset.m;
       if (m === 'save') { if (Save.save()) { this.closeModal(); this.toast('💾 Saved!'); } }
+      if (m === 'download') { Save.save(); Save.download(); this.closeModal(); this.toast('📥 City file downloaded! Open it on another computer with "Load a city".'); }
       if (m === 'budget') this.openBudget();
       if (m === 'help') this.openHelp();
       if (m === 'title') { Save.save(); this.closeModal(); showTitle(); }
@@ -418,9 +420,9 @@ function titleMain() {
   $('title').innerHTML = `<div class="title-card">${logoHtml()}
     <div class="title-sub">Build the city of your dreams! 🏙️✨</div>
     <div class="title-buttons">
-      ${m ? `<button class="btn go" id="tContinue">▶ Continue<small>${escapeHtml(m.cityName)} · ${fmtNum(m.pop)} people · ${m.mode === 'creative' ? 'Creative' : 'Career'}</small></button>` : ''}
+      ${m ? `<button class="btn go" id="tContinue">▶ Continue<small>${escapeHtml(m.cityName)} · ${fmtNum(m.pop)} people · ${m.mode === 'creative' ? 'Creative' : 'Career' + (m.difficulty ? ' · ' + DIFFICULTY[m.difficulty].name : '')}</small></button>` : ''}
       <button class="btn primary" id="tNew">✨ Start a new city</button>
-      ${anySave ? '<button class="btn" id="tLoad">📂 Load a city</button>' : ''}
+      <button class="btn" id="tLoad">📂 Load a city<small>or open a city file from another computer</small></button>
     </div>
     <div class="credit">Made with ♥ for ${escapeHtml(PERSONAL.mayor)} by Dad</div></div>`;
   const on = (id, f) => { const e = $(id); if (e) e.onclick = () => { Sound.init(); Sound.play('select'); f(); }; };
@@ -429,7 +431,7 @@ function titleMain() {
   on('tLoad', titleLoad);
 }
 function titleNew() {
-  let seed = Math.floor(Math.random() * 1e9), mode = 'career', slot = null;
+  let seed = Math.floor(Math.random() * 1e9), mode = 'career', slot = null, difficulty = 'normal';
   for (let i = 0; i < Save.SLOTS; i++) if (!Save.meta(i)) { slot = i; break; }
   if (slot == null) slot = 0;
   const preview = { terrain: new Uint8Array(N * N), tree: new Uint8Array(N * N) };
@@ -438,9 +440,10 @@ function titleNew() {
     <div class="landrow"><input type="text" id="nName" maxlength="24" value="${escapeHtml(PERSONAL.defaultCityName)}"><button class="btn" id="nRand" title="Random name">🎲</button></div>
     <label class="lbl">How do you want to play?</label>
     <div class="modes">
-      <button class="mode on" data-mode="career"><b>🏆 Career</b><span>Start small with $${fmtNum(START_MONEY)}. Earn money, finish quests and unlock bigger buildings!</span></button>
+      <button class="mode on" data-mode="career"><b>🏆 Career</b><span>Start small, earn money, finish quests and unlock bigger buildings!</span></button>
       <button class="mode" data-mode="creative"><b>🎨 Creative</b><span>Unlimited money and everything unlocked. Build anything you want!</span></button>
     </div>
+    <div id="nDiffBox"><label class="lbl">How hard?</label><div class="slots" id="nDiff">${Object.entries(DIFFICULTY).map(([k, d]) => `<button class="slot${k === 'normal' ? ' on' : ''}" data-diff="${k}"><b>${d.icon} ${d.name}</b>Start with ${fmtMoney(d.money)}<br><span style="color:#6d5a7d">${d.desc}</span></button>`).join('')}</div></div>
     <label class="lbl">Pick your land</label>
     <div class="landrow"><canvas id="nLand" width="192" height="100"></canvas><div><button class="btn" id="nReroll">🎲 Try different land</button><p style="font-size:13px;color:#6d5a7d;margin:6px 0 0">Blue is water: rivers and lakes!</p></div></div>
     <label class="lbl">Save slot</label><div class="slots" id="nSlots"></div>
@@ -460,11 +463,12 @@ function titleNew() {
     }
   };
   drawLand(); drawSlots();
-  document.querySelectorAll('.mode').forEach((b) => b.onclick = () => { Sound.play('click'); mode = b.dataset.mode; document.querySelectorAll('.mode').forEach((x) => x.classList.toggle('on', x === b)); });
+  document.querySelectorAll('.mode').forEach((b) => b.onclick = () => { Sound.play('click'); mode = b.dataset.mode; document.querySelectorAll('.mode').forEach((x) => x.classList.toggle('on', x === b)); $('nDiffBox').classList.toggle('hidden', mode === 'creative'); });
+  document.querySelectorAll('[data-diff]').forEach((b) => b.onclick = () => { Sound.play('click'); difficulty = b.dataset.diff; document.querySelectorAll('[data-diff]').forEach((x) => x.classList.toggle('on', x === b)); });
   $('nRand').onclick = () => { Sound.play('click'); $('nName').value = pick(CITY_NAMES.filter((n) => n !== $('nName').value)); };
   $('nReroll').onclick = () => { Sound.play('click'); seed = Math.floor(Math.random() * 1e9); drawLand(); };
   $('nBack').onclick = () => { Sound.play('click'); titleMain(); };
-  $('nGo').onclick = () => { Sound.play('place'); startNewGame({ name: $('nName').value.trim() || PERSONAL.defaultCityName, mode, slot, seed }); };
+  $('nGo').onclick = () => { Sound.play('place'); startNewGame({ name: $('nName').value.trim() || PERSONAL.defaultCityName, mode, slot, seed, difficulty }); };
 }
 function titleLoad() {
   let html = '<div class="panel"><h2>📂 Your cities</h2><div class="saves">';
@@ -474,9 +478,18 @@ function titleLoad() {
       <button class="btn danger" data-del="${i}">🗑️</button><button class="btn go" data-load="${i}">Play</button></div>`
       : `<div class="save-row"><div class="info"><b>Slot ${i + 1}</b><div>Empty</div></div></div>`;
   }
-  html += '</div><div class="acts"><button class="btn" id="lBack">← Back</button></div></div>';
+  html += '</div><div class="acts" style="display:flex;justify-content:space-between"><button class="btn" id="lBack">← Back</button><button class="btn primary" id="lUpload">📤 Open a city file…</button></div></div>';
   $('title').innerHTML = html;
   $('lBack').onclick = () => { Sound.play('click'); titleMain(); };
+  $('lUpload').onclick = () => {
+    Sound.play('click');
+    Save.pickFile((data) => {
+      if (!data) { alert("Hmm, that doesn't look like a city file."); return; }
+      let slot = null; for (let i = 0; i < Save.SLOTS; i++) if (!Save.meta(i)) { slot = i; break; }
+      if (slot == null) { const ans = prompt(`All 3 slots are full. Which slot should "${data.cityName}" replace? (1, 2 or 3)`, '1'); slot = parseInt(ans, 10) - 1; if (!(slot >= 0 && slot < Save.SLOTS)) return; }
+      if (Save.storeImported(data, slot)) { Sound.play('quest'); continueGame(slot); } else alert('Could not store the city in this browser.');
+    });
+  };
   document.querySelectorAll('[data-load]').forEach((b) => b.onclick = () => { Sound.play('select'); continueGame(+b.dataset.load); });
   document.querySelectorAll('[data-del]').forEach((b) => b.onclick = () => {
     if (b.dataset.sure) { Save.remove(+b.dataset.del); Sound.play('bulldoze'); titleLoad(); return; }

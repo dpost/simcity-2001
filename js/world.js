@@ -9,11 +9,11 @@ const inb = (x, y) => x >= 0 && y >= 0 && x < N && y < N;
 const DIRS = [[0, -1, 1], [1, 0, 2], [0, 1, 4], [-1, 0, 8]]; // dx, dy, road-mask bit
 const T_GRASS = 0, T_WATER = 1, T_SAND = 2;
 
-function newWorld({ seed, mode, cityName }) {
+function newWorld({ seed, mode, cityName, difficulty = 'normal' }) {
   for (const k in W) delete W[k];
   Object.assign(W, {
-    version: 1, seed, mode, cityName,
-    money: mode === 'creative' ? Infinity : START_MONEY,
+    version: 2, seed, mode, cityName, difficulty,
+    money: mode === 'creative' ? Infinity : DIFFICULTY[difficulty].money,
     taxRate: 7, month: 0, year: 1, tod: 0.3, tier: 0, playTime: 0,
     terrain: new Uint8Array(N * N), tree: new Uint8Array(N * N), road: new Uint8Array(N * N),
     zone: new Uint8Array(N * N), bld: new Int32Array(N * N).fill(-1),
@@ -129,6 +129,10 @@ function removeBuilding(b) {
 function buildingAt(x, y) { if (!inb(x, y)) return null; const id = W.bld[idx(x, y)]; return id >= 0 ? W.buildings.get(id) : null; }
 function hasLandmark(type) { for (const b of W.buildings.values()) if (b.type === type) return true; return false; }
 function isUnlocked(type) { return W.mode === 'creative' || !BT[type] || BT[type].tier <= W.tier; }
+function diff() { return DIFFICULTY[W.difficulty] || DIFFICULTY.easy; }
+function price(c) { return W.mode === 'creative' ? c : Math.round(c * diff().cost); }
+// small things that building over automatically clears away (no bulldozing needed)
+function replaceable(b) { return !BT[b.type] || (BT[b.type].park && BT[b.type].size === 1); }
 function canAfford(c) { return W.mode === 'creative' || W.money >= c; }
 function spend(c) { if (W.mode !== 'creative') W.money -= c; }
 function roadMask(x, y) {
@@ -147,43 +151,54 @@ function checkPlace(type, x, y) {
   const t = BT[type], s = t.size;
   if (!isUnlocked(type)) return { ok: false, msg: `Unlocks when your city becomes a ${TIERS[t.tier].name}` };
   if (t.landmark && hasLandmark(type)) return { ok: false, msg: 'You already built this! Only one allowed.' };
-  let cost = t.cost;
+  let cost = price(t.cost);
+  const replace = new Map();
   for (let dy = 0; dy < s; dy++) for (let dx = 0; dx < s; dx++) {
     const px = x + dx, py = y + dy;
     if (!inb(px, py)) return { ok: false, msg: 'Too close to the edge of the map' };
     const i = idx(px, py);
     if (W.terrain[i] === T_WATER) return { ok: false, msg: "Can't build on water" };
     if (W.road[i]) return { ok: false, msg: 'A road is in the way' };
-    if (W.bld[i] >= 0) return { ok: false, msg: 'Something is already here (bulldoze it first)' };
-    if (t.isTree && W.tree[i]) return { ok: false, msg: 'There is already a tree here' };
+    if (t.isTree && (W.tree[i] || W.bld[i] >= 0)) return { ok: false, msg: 'There is already something here' };
+    if (W.bld[i] >= 0) {
+      const b = W.buildings.get(W.bld[i]);
+      if (!replaceable(b)) return { ok: false, msg: `${buildingName(b)} is in the way` };
+      if (!replace.has(b.id)) { replace.set(b.id, b); cost += bulldozeCost(b.x, b.y); }
+    }
     if (W.tree[i] && !t.isTree) cost += CLEAR_TREE_COST;
   }
   if (!canAfford(cost)) return { ok: false, cost, msg: `Not enough money (needs ${fmtMoney(cost)})` };
-  return { ok: true, cost };
+  return { ok: true, cost, replace: [...replace.values()] };
 }
 function placeThing(type, x, y) {
   const c = checkPlace(type, x, y);
   if (!c.ok) return c;
   spend(c.cost);
-  if (BT[type].isTree) { const i = idx(x, y); W.tree[i] = 1 + Math.floor(Math.random() * 4); W.zone[i] = 0; D.lvDirty = D.miniDirty = true; return { ok: true, cost: c.cost }; }
+  for (const old of c.replace) removeBuilding(old);
+  if (BT[type].isTree) { const i = idx(x, y); W.tree[i] = 1 + Math.floor(Math.random() * 4); W.zone[i] = 0; markGround(x, y); D.lvDirty = D.miniDirty = true; return { ok: true, cost: c.cost }; }
   const b = createBuilding(type, x, y);
-  return { ok: true, cost: c.cost, b };
+  return { ok: true, cost: c.cost, b, replaced: c.replace.length };
 }
 
 function checkRoad(x, y) {
   if (!inb(x, y)) return { ok: false, msg: 'Off the map' };
   const i = idx(x, y);
   if (W.road[i]) return { ok: true, cost: 0, skip: true };
-  if (W.bld[i] >= 0) return { ok: false, msg: 'A building is in the way' };
-  let cost = W.terrain[i] === T_WATER ? BRIDGE_COST : ROAD_COST;
+  let cost = price(W.terrain[i] === T_WATER ? BRIDGE_COST : ROAD_COST), replace = null;
+  if (W.bld[i] >= 0) {
+    const b = W.buildings.get(W.bld[i]);
+    if (!replaceable(b) || b.size > 1) return { ok: false, msg: `${buildingName(b)} is in the way` };
+    replace = b; cost += bulldozeCost(x, y);
+  }
   if (W.tree[i]) cost += CLEAR_TREE_COST;
-  return { ok: true, cost };
+  return { ok: true, cost, replace };
 }
 function placeRoad(x, y) {
   const c = checkRoad(x, y);
   if (!c.ok || c.skip) return c;
   if (!canAfford(c.cost)) return { ok: false, msg: 'Not enough money!' };
   spend(c.cost);
+  if (c.replace) removeBuilding(c.replace);
   const i = idx(x, y); W.road[i] = 1; W.tree[i] = 0; W.zone[i] = 0; markGround(x, y);
   D.dirty = D.lvDirty = D.miniDirty = true;
   return c;
@@ -192,15 +207,22 @@ function placeRoad(x, y) {
 function checkZone(z, x, y) {
   if (!inb(x, y)) return { ok: false };
   const i = idx(x, y);
-  if (W.terrain[i] === T_WATER || W.road[i] || W.bld[i] >= 0) return { ok: false };
-  if (W.zone[i] === ZONES[z].id) return { ok: true, cost: 0, skip: true };
-  return { ok: true, cost: ZONE_COST + (W.tree[i] ? CLEAR_TREE_COST : 0) };
+  if (W.terrain[i] === T_WATER || W.road[i]) return { ok: false };
+  let replace = null, cost = price(ZONE_COST) + (W.tree[i] ? CLEAR_TREE_COST : 0);
+  if (W.bld[i] >= 0) {
+    const b = W.buildings.get(W.bld[i]);
+    if (b.type === z) return { ok: true, cost: 0, skip: true };
+    if (!replaceable(b) || b.size > 1) return { ok: false };
+    replace = b; cost += bulldozeCost(x, y);
+  } else if (W.zone[i] === ZONES[z].id) return { ok: true, cost: 0, skip: true };
+  return { ok: true, cost, replace };
 }
 function placeZone(z, x, y) {
   const c = checkZone(z, x, y);
   if (!c.ok || c.skip) return c;
   if (!canAfford(c.cost)) return { ok: false, msg: 'Not enough money!' };
   spend(c.cost);
+  if (c.replace) removeBuilding(c.replace);
   const i = idx(x, y); W.zone[i] = ZONES[z].id; W.tree[i] = 0; markGround(x, y);
   D.dirty = D.lvDirty = D.miniDirty = true;
   return c;
@@ -209,7 +231,7 @@ function placeZone(z, x, y) {
 function bulldozeCost(x, y) {
   if (!inb(x, y)) return 0;
   const i = idx(x, y), b = buildingAt(x, y);
-  if (b) return BT[b.type] ? Math.max(5, Math.round(BT[b.type].cost * 0.05)) : 5 * b.level;
+  if (b) return BT[b.type] ? Math.max(5, Math.round(price(BT[b.type].cost) * 0.05)) : 5 * b.level;
   if (W.road[i] || W.tree[i]) return 2;
   return 0;
 }

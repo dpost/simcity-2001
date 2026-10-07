@@ -41,6 +41,7 @@ const Quests = {
     }
     return 0;
   },
+  rewardOf(q) { return Math.round(((q.reward || 0) * (q.tut && W.mode !== 'creative' ? diff().reward : 1)) / 10) * 10; },
   progress(q) { return clamp(this.value(q) - (q.base || 0), 0, q.goal); },
 
   ensure() {
@@ -58,7 +59,7 @@ const Quests = {
 
   generate() {
     const c = S.counts || {}, tier = W.tier, recent = W.quest.history.slice(-3);
-    const rew = (m) => Math.round((400 + tier * 600) * m / 50) * 50;
+    const rew = (m) => Math.max(50, Math.round(((400 + tier * 600) * m * (W.mode === 'creative' ? 1 : diff().reward)) / 50) * 50);
     const gens = [
       () => { const g = niceRound(Math.max(S.pop * 1.3, S.pop + 150)); return { id: 'pop', kind: 'pop', goal: g, title: `Reach ${fmtNum(g)} people`, text: `${W.cityName} is getting popular! Let's grow to ${fmtNum(g)} people. Zone more land where the demand bars are tall.`, reward: rew(1.5) }; },
       () => ({ id: 'parks', kind: 'parks', goal: 3, base: c.parks || 0, rel: true, title: 'Build 3 more parks', text: 'Parks make people happy, and happy people build taller buildings. Build 3 more parks or gardens!', reward: rew(0.8), tool: 'parks' }),
@@ -78,6 +79,10 @@ const Quests = {
       },
       () => { if (W.mode === 'creative') return null; const g = niceRound(Math.max(500, S.net * 1.4 + 200)); return { id: 'income', kind: 'income', goal: g, title: `Earn ${fmtMoney(g)} a month`, text: `Let's grow the treasury! Get your monthly profit to ${fmtMoney(g)}. More people and businesses mean more taxes.`, reward: rew(1) }; },
     ];
+    if (tier >= 1 && !(c.lvl3 > 0) && !recent.includes('first_sky')) {
+      return { id: 'first_sky', kind: 'lvl3', goal: 1, base: 0, title: 'Grow your first skyscraper!', tool: 'parks', reward: rew(1.6),
+        text: `Skyscrapers grow where the land is REALLY nice (niceness 50+). Put parks, trees, a fountain, a school and police right next to a block of homes or shops. Tap the 🏗️ map button (bottom right): green buildings are ready to grow, orange ones need a nicer spot!` };
+    }
     const order = gens.map((g, i) => i).sort(() => Math.random() - 0.5);
     for (const i of order) {
       const q = gens[i]();
@@ -97,7 +102,7 @@ const Quests = {
       Q.active.splice(Q.active.indexOf(q), 1);
       Q.done++; Q.history.push(q.id); if (Q.history.length > 10) Q.history.shift();
       if (q.tut) Q.tut++;
-      const reward = q.reward || 0;
+      const reward = this.rewardOf(q);
       if (W.mode !== 'creative') W.money += reward;
       Sound.play('quest');
       FX.confetti(60);

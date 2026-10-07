@@ -161,7 +161,7 @@ const Input = {
       const c = checkPlace(pt, ox, oy);
       this.ghost = { type: pt, x: ox, y: oy, ok: c.ok };
       for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) this.tiles.push([ox + x, oy + y, c.ok]);
-      tip = `${BT[pt].icon} ${escapeHtml(BT[pt].name)} <b>${fmtMoney(c.cost || BT[pt].cost)}</b>` + (c.ok ? '' : ` <span class="bad">${escapeHtml(c.msg)}</span>`);
+      tip = `${BT[pt].icon} ${escapeHtml(BT[pt].name)} <b>${fmtMoney(c.cost || price(BT[pt].cost))}</b>` + (c.ok ? (c.replace && c.replace.length ? ` <span class="bad">(replaces ${c.replace.length})</span>` : '') : ` <span class="bad">${escapeHtml(c.msg)}</span>`);
     } else if (t === 'inspect' && this.hover) {
       const b = buildingAt(...this.hover);
       tip = b ? escapeHtml(buildingName(b)) : null;
