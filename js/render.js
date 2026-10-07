@@ -54,6 +54,7 @@ function spriteFor(b) {
 function groundFor(i, x, y, t) {
   const ter = W.terrain[i];
   if (W.road[i]) return roadTile(roadMask(x, y), ter === T_WATER);
+  if (typeof Dis !== 'undefined' && Dis.rubble[i]) return rubbleTile();
   if (ter === T_WATER) return waterTile((Math.floor(t * 1.6) + x * 7 + y * 13) % 4);
   const bid = W.bld[i];
   if (bid >= 0) {
@@ -271,6 +272,7 @@ function render(t, dt) {
     g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
   }
   if (dusk > 0.01) { g.fillStyle = `rgba(255,130,70,${dusk * 0.10})`; diamondPath(g, 0, 0, N); g.fill(); }
+  Dis.drawGround(g, t, u0, u1, v0, v1);
   Ents.drawShadows(R.P);
   Input.drawGroundPreview(g, t);
 
@@ -309,6 +311,7 @@ function render(t, dt) {
     g.drawImage(iconCanvas(n === 1 ? '🚗' : '⚡'), X - 9, Y - 34 + Math.sin(t * 4 + Y) * 2, 18, 18);
   }
   FX.draw(R.P, night);
+  Dis.drawSky(g, t);
   Ents.drawFlyers(R.P, t, night);
   Input.drawPreview(g, t, night);
   Ents.drawClouds(R.P, z, night);

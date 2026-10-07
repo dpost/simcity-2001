@@ -4,6 +4,7 @@
 // =====================================================================
 const Game = {
   state: 'title', celebrate: 0, speed: 1, lastSpeed: 1, slot: null, overlay: null, shake: 0, autosaveT: 30, titleT: 0,
+  goTo(x, y) { if (!this.visible(x, y, -1.5)) centerOnTile(x, y); },
   visible(x, y, margin = 2) {
     const [X, Y] = Pw(x + 0.5, y + 0.5), [sx, sy] = worldToScreen(X, Y), m = margin * 64 * Cam.zoom;
     return sx > -m && sx < R.w + m && sy > -m && sy < R.h + m;
@@ -117,6 +118,7 @@ function frame(now) {
     const paused = UI.modalOpen();
     const gdt = paused ? 0 : dt * Game.speed;
     simUpdate(gdt);
+    Dis.update(gdt, dt);
     Input.updateKeys(dt);
     Ents.update(dt, gdt, nightFactor());
     News.update(dt);

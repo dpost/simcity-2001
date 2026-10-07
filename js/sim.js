@@ -151,6 +151,7 @@ function growthStep() {
     const z = W.zone[i]; if (!z) continue;
     const zk = ZKEY[z], dem = S.demand[zk], bid = W.bld[i];
     if (bid < 0) {
+      if (Dis.rubble[i] || Dis.rad[i]) continue;
       if (!D.roadNear[i]) { D.needs[i] = 1; S.needRoad++; continue; }
       if (!D.powered[i]) { D.needs[i] = 2; S.needPower++; continue; }
       if (dem <= 0 || built >= 8) continue;
@@ -219,6 +220,7 @@ function monthTick() {
   }
   if (W.month === 0) { W.year++; UI.toast(`🎆 Happy New Year ${W.year}!`); FX.fireworksShow(6, 4); }
   News.monthly();
+  Dis.monthly();
 }
 
 function simUpdate(dt) {

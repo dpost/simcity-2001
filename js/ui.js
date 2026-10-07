@@ -55,6 +55,10 @@ const UI = {
   clickTool(id) {
     const t = TOOLBAR.find((x) => x.id === id);
     Sound.play('click');
+    if (t.special) {
+      if (this.flyGroup === id) { this.closeFlyout(); return; }
+      this.flyGroup = id; Input.setTool('inspect'); this.renderFlyout(); this.syncTools(); return;
+    }
     if (t.group) {
       if (this.flyGroup === id) { this.closeFlyout(); return; }
       this.flyGroup = id; this.renderFlyout();
@@ -75,6 +79,7 @@ const UI = {
     if (!id) return;
     const t = TOOLBAR.find((x) => x.id === id);
     el.innerHTML = `<h4>${t.icon} ${t.label}</h4>`;
+    if (id === 'disasters') { this.renderDisasters(el); return; }
     for (const k of t.group) {
       const bt = BT[k], locked = !isUnlocked(k), built = bt.landmark && hasLandmark(k);
       const c = document.createElement('button');
@@ -92,6 +97,25 @@ const UI = {
       });
       el.appendChild(c);
     }
+    el.classList.remove('hidden');
+  },
+  renderDisasters(el) {
+    const tog = document.createElement('button');
+    tog.className = 'card'; tog.innerHTML = `<div style="font-size:28px">${Dis.randomOn ? '🎲' : '🚫'}</div><div><div class="cn">Surprise disasters: ${Dis.randomOn ? 'ON' : 'OFF'}</div><div class="cd">${Dis.randomOn ? 'Disasters can happen by surprise once you are a Town.' : 'No surprises. Only the ones you start yourself.'} Click to switch.</div></div>`;
+    tog.onclick = () => { Dis.randomOn = !Dis.randomOn; Sound.play('click'); this.renderFlyout(); };
+    el.appendChild(tog);
+    for (const [k, d] of Object.entries(DISASTERS)) {
+      const c = document.createElement('button');
+      c.className = 'card' + (Input.tool === 'disaster' && Input.sub === k ? ' on' : '');
+      c.innerHTML = `<div style="font-size:34px;width:56px;text-align:center">${d.icon}</div><div><div class="cn">${d.name}</div><div class="cd">${d.desc}</div></div>`;
+      c.onclick = () => {
+        if (Dis.active() && !d.aim) { this.toast('Wait until the current disaster is over!'); Sound.play('error'); return; }
+        if (d.aim) { Input.setTool('disaster', k); Sound.play('select'); this.renderFlyout(); this.toast(`${d.icon} Now click on the map!`); R.cv.style.cursor = 'crosshair'; }
+        else if (Dis.start(k, -1, -1)) this.closeFlyout();
+      };
+      el.appendChild(c);
+    }
+    const tip = document.createElement('div'); tip.innerHTML = this.moeTip('Fire stations put out fires, and rubble clears by itself after a while. You can also build right over it!'); el.appendChild(tip);
     el.classList.remove('hidden');
   },
   thumb(type) {
@@ -269,6 +293,7 @@ const UI = {
         if (t.poll) h += row('🌫️ Pollution', `${t.poll.r} tiles around`);
         if (!t.power && !t.park) h += row('⚡ Power', b.powered ? '✅ Yes' : '❌ No power!');
       }
+      if (Dis.fire.has(b.id)) h += '<p class="tip" style="background:#ffe1e1;color:#c0392b">🔥 ON FIRE! Fire stations nearby help put it out.</p>';
       h += '<div class="acts">';
       if (b.type === 'space') h += `<button class="btn go" data-act="launch" ${b.launching ? 'disabled' : ''}>🚀 ${b.launching ? 'Rocket is flying!' : 'Launch rocket!'}</button>`;
       if (b.type === 'dogpark') h += '<button class="btn" data-act="woof">🐕 Say hi</button>';
@@ -277,7 +302,9 @@ const UI = {
     } else {
       if (!inb(tx, ty)) return;
       const i = idx(tx, ty);
-      if (W.road[i]) h += `<h3>🛣️ ${W.terrain[i] === T_WATER ? 'Bridge' : 'Road'}</h3><p>Cars, buses and ice cream trucks drive here. Roads also carry power!</p>` + row('⚡ Power', D.powered[i] ? '✅ Connected' : '❌ Not connected');
+      if (Dis.rad[i]) h += `<h3>☢️ Radiation zone</h3><p class="tip">Nothing can be built here for about ${Math.ceil(Dis.rad[i] / 12 * 10) / 10} more years. It slowly fades away.</p>`;
+      else if (Dis.rubble[i]) h += '<h3>🧱 Rubble</h3><p class="tip">Leftovers from a disaster. It clears by itself in a few months, or build right over it!</p>';
+      else if (W.road[i]) h += `<h3>🛣️ ${W.terrain[i] === T_WATER ? 'Bridge' : 'Road'}</h3><p>Cars, buses and ice cream trucks drive here. Roads also carry power!</p>` + row('⚡ Power', D.powered[i] ? '✅ Connected' : '❌ Not connected');
       else if (W.zone[i]) {
         const z = ZONES[ZKEY[W.zone[i]]];
         const why = !D.roadNear[i] ? '🚗 Needs a road within 2 tiles!' : !D.powered[i] ? '⚡ Needs power! Connect it to a power plant.' : S.demand[ZKEY[W.zone[i]]] <= 0 ? `Waiting for the city to want more ${z.name.toLowerCase()}.` : '✨ A building will pop up soon!';

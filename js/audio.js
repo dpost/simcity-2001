@@ -91,6 +91,11 @@ const Sound = {
       case 'rocket': Nz(4.5, { freq: 200, freqEnd: 900, vol: 0.45, attack: 0.6 }); T(55, 4, { type: 'sawtooth', vol: 0.06, attack: 0.5 }); break;
       case 'woof': T(420, 0.09, { type: 'sawtooth', vol: 0.07, slide: 0.55 }); T(380, 0.11, { type: 'sawtooth', vol: 0.07, slide: 0.5, when: 0.16 }); break;
       case 'meow': T(600, 0.18, { type: 'triangle', vol: 0.12, slide: 1.5 }); T(900, 0.3, { type: 'triangle', vol: 0.1, slide: 0.6, when: 0.17 }); break;
+      case 'siren': for (let k = 0; k < 3; k++) { T(700, 0.35, { type: 'square', vol: 0.05, slide: 1.4, when: k * 0.7 }); T(980, 0.35, { type: 'square', vol: 0.05, slide: 0.7, when: k * 0.7 + 0.35 }); } break;
+      case 'wind': Nz(2.6, { filter: 'bandpass', freq: 300, freqEnd: 900, q: 2, vol: 0.25, attack: 0.6 }); break;
+      case 'wave': Nz(5, { freq: 300, freqEnd: 1600, vol: 0.4, attack: 1.5 }); Nz(3, { freq: 2000, freqEnd: 400, vol: 0.15, when: 2.5 }); break;
+      case 'crackle': for (let k = 0; k < 4; k++) Nz(0.04, { filter: 'highpass', freq: 2500, vol: 0.05, when: Math.random() * 0.5 }); break;
+      case 'alarm': for (let k = 0; k < 4; k++) T(520, 0.3, { type: 'sawtooth', vol: 0.06, when: 0.5 + k * 0.5, slide: 0.8 }); break;
       case 'cash': T(1568, 0.08, { type: 'square', vol: 0.05 }); T(2093, 0.3, { type: 'square', vol: 0.05, when: 0.08 }); break;
     }
   },

@@ -57,6 +57,10 @@ const Input = {
     }
     if (e.button !== 0) return;
     const [tx, ty] = screenToTile(e.clientX, e.clientY);
+    if (this.tool === 'disaster') {
+      if (Dis.start(this.sub, tx, ty)) { this.setTool('inspect'); UI.closeFlyout(); UI.syncTools(); }
+      return;
+    }
     this.down = { tx, ty };
     this.painted = new Set();
     if (this.placeType() === 'tree') this.paintTree(tx, ty);
@@ -162,6 +166,9 @@ const Input = {
       this.ghost = { type: pt, x: ox, y: oy, ok: c.ok };
       for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) this.tiles.push([ox + x, oy + y, c.ok]);
       tip = `${BT[pt].icon} ${escapeHtml(BT[pt].name)} <b>${fmtMoney(c.cost || price(BT[pt].cost))}</b>` + (c.ok ? (c.replace && c.replace.length ? ` <span class="bad">(replaces ${c.replace.length})</span>` : '') : ` <span class="bad">${escapeHtml(c.msg)}</span>`);
+    } else if (t === 'disaster') {
+      const d = DISASTERS[this.sub]; tip = `${d.icon} Click where the ${d.name.toLowerCase()} should start!`;
+      if (inb(tx, ty)) this.tiles = [[tx, ty, true]];
     } else if (t === 'inspect' && this.hover) {
       const b = buildingAt(...this.hover);
       tip = b ? escapeHtml(buildingName(b)) : null;

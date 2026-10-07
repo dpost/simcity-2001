@@ -36,6 +36,7 @@ const Ents = {
       else if (r < 0.1) kind = 'icecream';
       else if (r < 0.18 && (S.counts.I || 0) > 0) kind = 'truck';
       else if (r < 0.2 && (S.counts.types || {}).police) kind = 'police';
+      if (Dis.fire.size && Math.random() < 0.3) kind = 'firetruck';
       Object.assign(m, { spd: kind === 'bus' || kind === 'truck' ? rnd(0.9, 1.1) : rnd(1.1, 1.7), kind, col: pick(CAR_COLS) });
     }
     list.push(m);
@@ -137,6 +138,7 @@ const Ents = {
     if (car.kind === 'icecream') { body = '#ffffff'; hgt = 8; }
     if (car.kind === 'truck') { body = '#e8e8e8'; hgt = 9; }
     if (car.kind === 'police') body = '#ffffff';
+    if (car.kind === 'firetruck') { body = '#e8283c'; hgt = 8; }
     const dk = night > 0.05 ? (c) => mix(c, '#141a3c', night * 0.55) : (c) => c;
     P.box(u - hu, v - hv, u + hu, v + hv, 0.5, hgt, dk(body), { outline: false, right: dk(shade(body, -0.25)), top: dk(shade(body, 0.15)), left: dk(body) });
     if (car.kind === 'car' || car.kind === 'police') {
@@ -145,6 +147,8 @@ const Ents = {
       if (car.kind === 'police') { const [x, y] = Pw(u, v, hgt + 4); P.circle(x - 1.5, y, 1.2, '#ff3030'); P.circle(x + 1.5, y, 1.2, '#3060ff'); }
     } else if (car.kind === 'bus') {
       if (along) P.poly(P.qL(u - hu + 0.03, u + hu - 0.03, v + hv, 4, 7), dk(cab)); else P.poly(P.qR(v - hv + 0.03, v + hv - 0.03, u + hu, 4, 7), dk(cab));
+    } else if (car.kind === 'firetruck') {
+      const [x, y] = Pw(u, v, hgt + 1); P.circle(x, y, 1.6, Math.sin(performance.now() / 90) > 0 ? '#ff3030' : '#3060ff');
     } else if (car.kind === 'icecream') {
       const [x, y] = Pw(u, v, hgt); P.poly([[x - 2, y - 3], [x + 2, y - 3], [x, y + 1]], '#e2a65c'); P.circle(x, y - 4, 2.2, '#ff8fb8');
     }
@@ -325,10 +329,10 @@ const FX = {
       this.smokeT = 0.3;
       for (const b of W.buildings.values()) {
         if (!b.powered && !(BT[b.type] && BT[b.type].power)) continue;
-        if (!(b.type === 'I' && b.level >= 2) && b.type !== 'coal') continue;
+        if (!(b.type === 'I' && b.level >= 2) && b.type !== 'coal' && b.type !== 'nuclear') continue;
         if (!Game.visible(b.x, b.y, 4)) continue;
         const spr = spriteFor(b);
-        for (const [ex, ey] of spr.emit) { const [X0, Y0] = Pw(b.x, b.y, 0); this.smoke(X0 + ex, Y0 + ey, 2.5, b.type === 'coal' ? '#9a9aa2' : '#d8d8de', 3.5); }
+        for (const [ex, ey] of spr.emit) { const [X0, Y0] = Pw(b.x, b.y, 0); this.smoke(X0 + ex, Y0 + ey, b.type === 'nuclear' ? 5 : 2.5, b.type === 'coal' ? '#9a9aa2' : b.type === 'nuclear' ? '#f4f6f8' : '#d8d8de', 3.5); }
       }
     }
   },
