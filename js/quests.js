@@ -5,7 +5,7 @@
 const D_ = PERSONAL.dog, M_ = PERSONAL.mayor;
 const TUTORIAL = [
   { id: 't_road', title: 'Build a road', kind: 'roads', goal: 10, reward: 500, tool: 'road',
-    text: `Hi Mayor ${M_}! I'm ${D_}, your Chief Advisor (and a very good boy). Every city starts with roads! Pick 🛣️ Road and drag on the map to build 10 road tiles.` },
+    text: `Hi Mayor ${M_}! I'm ${D_}, your Chief Advisor (and a very good girl). Every city starts with roads! Pick 🛣️ Road and drag on the map to build 10 road tiles.` },
   { id: 't_homes', title: 'Zone some homes', kind: 'zoneR', goal: 8, reward: 500, tool: 'zoneR',
     text: 'People need places to live! Pick 🏠 Homes and drag to paint at least 8 home zones right next to your road.' },
   { id: 't_power', title: 'Power it up!', kind: 'plants', goal: 1, reward: 1000, tool: 'power',

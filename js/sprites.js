@@ -196,9 +196,10 @@ class Painter {
     const g = this.g; g.save(); g.translate(x, y); if (flip) g.scale(-1, 1); g.scale(s, s);
     g.strokeStyle = shade(fur, -0.35); g.lineWidth = 1.3; g.lineCap = 'round';
     g.beginPath(); g.moveTo(-3, -3); g.lineTo(-3 - leg, 0); g.moveTo(3, -3); g.lineTo(3 + leg, 0); g.stroke();
-    this.ellipse(0, -4.5, 5, 3, fur);
-    g.beginPath(); g.moveTo(-4.5, -5); g.quadraticCurveTo(-8, -9, -7, -10); g.strokeStyle = fur; g.lineWidth = 1.4; g.stroke();
-    this.circle(5, -8, 3.2, fur); this.ellipse(4, -8, 1.3, 2.4, ears); this.circle(8, -7.5, 0.9, PERSONAL.dogColors.nose); this.circle(5.8, -9, 0.6, '#222');
+    const ol = 'rgba(70,60,50,0.35)';
+    g.beginPath(); g.moveTo(-4.5, -5); g.quadraticCurveTo(-8, -9, -7, -10); g.strokeStyle = ol; g.lineWidth = 2.2; g.stroke(); g.strokeStyle = fur; g.lineWidth = 1.4; g.stroke();
+    this.ellipse(0, -4.5, 5, 3, fur, ol);
+    this.circle(5, -8, 3.2, fur, ol, 0.6); this.ellipse(4, -8, 1.3, 2.4, ears); this.circle(8, -7.5, 0.9, PERSONAL.dogColors.nose); this.circle(5.8, -9, 0.6, '#222');
     g.restore();
   }
   cat(x, y, s = 1, fur = PERSONAL.catColors.fur) {
@@ -917,7 +918,7 @@ const ANIM = {
   },
   dogpark(p, b, t) {
     const [cx, cy] = p.iso(0.82, 0.82, 0);
-    const dogs = [[PERSONAL.dogColors.fur, PERSONAL.dogColors.ears, 1.6, 0], ['#f5f0e6', '#c9b8a0', 1.25, 2.1], ['#4a4a4a', '#2a2a2a', 1.4, 4.2]];
+    const dogs = [[PERSONAL.dogColors.fur, PERSONAL.dogColors.ears, 1.6, 0], ['#e0b46c', '#b8863f', 1.25, 2.1], ['#4a4a4a', '#2a2a2a', 1.4, 4.2]];
     for (const [fur, ears, sp, ph] of dogs) {
       const a = t * sp + ph, x = cx + Math.cos(a) * 26, y = cy + Math.sin(a) * 10 + 2;
       p.dog(x, y, 1.05, fur, ears, Math.sin(a) > 0, Math.sin(t * 14 + ph) * 1.5);
@@ -1077,13 +1078,18 @@ function portrait(kind) {
   g.fillStyle = bg; g.beginPath(); g.arc(64, 64, 62, 0, 7); g.fill();
   if (kind === 'dog') {
     const F = PERSONAL.dogColors;
-    g.fillStyle = F.ears; g.beginPath(); g.ellipse(30, 58, 14, 30, 0.35, 0, 7); g.fill(); g.beginPath(); g.ellipse(98, 58, 14, 30, -0.35, 0, 7); g.fill();
-    p.ellipse(64, 66, 36, 38, F.fur); p.ellipse(64, 86, 22, 17, shade(F.fur, 0.35));
+    g.lineWidth = 2.5; g.strokeStyle = F.outline;
+    g.fillStyle = F.ears; g.beginPath(); g.ellipse(30, 60, 14, 28, 0.35, 0, 7); g.fill(); g.stroke(); g.beginPath(); g.ellipse(98, 60, 14, 28, -0.35, 0, 7); g.fill(); g.stroke();
+    for (let i = 0; i < 14; i++) { const a = Math.PI * 0.15 + (i / 13) * Math.PI * 0.7; p.circle(64 + Math.cos(a) * 34, 74 + Math.sin(a) * 34, 7, F.fur); }
+    g.beginPath(); g.ellipse(64, 66, 36, 38, 0, 0, 7); g.fillStyle = F.fur; g.fill(); g.stroke();
+    const sh = g.createRadialGradient(56, 50, 8, 64, 66, 40); sh.addColorStop(0, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(200,185,160,0.35)');
+    g.fillStyle = sh; g.beginPath(); g.ellipse(64, 66, 36, 38, 0, 0, 7); g.fill();
+    p.ellipse(64, 86, 22, 17, F.muzzle, F.outline);
     p.ellipse(50, 58, 6, 7, '#2b1d14'); p.ellipse(78, 58, 6, 7, '#2b1d14'); p.circle(52, 55, 2, '#fff'); p.circle(80, 55, 2, '#fff');
     p.ellipse(64, 78, 9, 6.5, F.nose); p.circle(61, 76, 2, 'rgba(255,255,255,0.5)');
     g.strokeStyle = '#2b1d14'; g.lineWidth = 2.5; g.lineCap = 'round'; g.beginPath(); g.moveTo(64, 84); g.lineTo(64, 90); g.quadraticCurveTo(56, 96, 50, 91); g.moveTo(64, 90); g.quadraticCurveTo(72, 96, 78, 91); g.stroke();
     g.fillStyle = '#ff7a9a'; g.beginPath(); g.ellipse(64, 99, 6, 7, 0, 0, Math.PI); g.fill();
-    g.fillStyle = '#e8283c'; g.fillRect(36, 104, 56, 8); p.circle(64, 116, 6, '#f5c518');
+    g.fillStyle = F.collar; g.fillRect(38, 104, 52, 7); p.circle(64, 115, 5.5, '#f5c518');
   } else {
     const F = PERSONAL.catColors;
     p.poly([[30, 55], [34, 14], [58, 38]], F.fur); p.poly([[98, 55], [94, 14], [70, 38]], F.fur);

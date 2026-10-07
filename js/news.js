@@ -6,7 +6,7 @@ const News = {
   queue: [], current: '', timer: 0, recent: [],
   fun: [
     '{cat} the cat was spotted napping on a warm car hood. The car was not consulted.',
-    '{dog} has officially sniffed every fire hydrant in {city}. "They are all excellent," he reports.',
+    '{dog} has officially sniffed every fire hydrant in {city}. "They are all excellent," she reports.',
     'Survey: 9 out of 10 residents say Mayor {mayor} is the best mayor ever. The 10th was a squirrel.',
     'Local dad {dad} claims his pancakes are the best in {city}. Nobody has dared to disagree.',
     'Scientists confirm: ice cream tastes 47% better on sunny days in {city}.',
@@ -25,7 +25,7 @@ const News = {
     'Fun fact: {city} has more dogs than parking meters. The dogs are winning.',
     '{dog} has been promoted to Chief Advisor of Treats. Again.',
     'A cat café asked if {cat} could visit. The answer was "only if he is nice." He was not.',
-    'Mysterious paw prints found on fresh cement downtown. Main suspect: {dog}. He denies everything.',
+    'Mysterious paw prints found on fresh cement downtown. Main suspect: {dog}. She denies everything.',
     'Local robot learns to dance. Mostly does "the robot."',
     'Breaking: {dad} tells the same joke for the 100th time. Family still laughing (politely).',
     'Residents report the clouds over {city} look extra fluffy today.',

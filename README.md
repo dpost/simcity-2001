@@ -46,7 +46,7 @@ const PERSONAL = {
   dog: 'Moe',
   cat: 'Jason',
   defaultCityName: 'Snortopolis',
-  dogColors: { fur: '#c8915a', ears: '#7a4b26', nose: '#2b1d14' },   // make Moe look like Moe
+  dogColors: { fur: '#f8f5ee', ears: '#ece2d0', muzzle: '#ffffff', nose: '#2b1d14', outline: '#cfc6b6', collar: '#ff6fa5' }, // Moe: white Pyrador
   catColors: { fur: '#f2a54a', stripes: '#c46f1c', eyes: '#62c050' }, // ...and Jason like Jason
 };
 ```

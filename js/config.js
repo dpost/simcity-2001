@@ -6,11 +6,11 @@ const PERSONAL = {
   mayor: 'Nelly',                    // the player: "Mayor Nelly"
   nicknames: ['Nellbo', 'Snorty'],   // used for landmarks and jokes
   dad: 'David',
-  dog: 'Moe',                        // the Chief Advisor!
+  dog: 'Moe',                        // the Chief Advisor! (a white Pyrador)
   cat: 'Jason',
   defaultCityName: 'Snortopolis',
   // Make Moe and Jason look like the real ones:
-  dogColors: { fur: '#c8915a', ears: '#7a4b26', nose: '#2b1d14' },
+  dogColors: { fur: '#f8f5ee', ears: '#ece2d0', muzzle: '#ffffff', nose: '#2b1d14', outline: '#cfc6b6', collar: '#ff6fa5' },
   catColors: { fur: '#f2a54a', stripes: '#c46f1c', eyes: '#62c050' },
 };
 const NICK1 = PERSONAL.nicknames[0] || PERSONAL.mayor;
