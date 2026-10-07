@@ -221,6 +221,7 @@ function monthTick() {
   if (W.month === 0) { W.year++; UI.toast(`🎆 Happy New Year ${W.year}!`); FX.fireworksShow(6, 4); }
   News.monthly();
   Dis.monthly();
+  Life.payday();
 }
 
 function simUpdate(dt) {

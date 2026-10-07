@@ -22,6 +22,7 @@
       </button>
       <div class="tb-stat" title="Population"><span class="ico">👥</span><b id="statPop">0</b></div>
       <button class="tb-stat tb-btn" id="moneyBtn" title="Money (click for budget &amp; taxes)"><span class="ico">💰</span><b id="statMoney">$0</b><small id="statNet"></small></button>
+      <button class="tb-stat tb-btn" id="walletBtn" title="Your own wallet (Mayor's salary). Click for My Stuff"><span class="ico">👛</span><b id="statWallet">$0</b></button>
       <div class="tb-stat" title="Happiness"><span class="ico" id="statHappyIco">🙂</span><b id="statHappy">50%</b></div>
       <div class="tb-stat rci" title="What does your city want? Tall bars = build more of that!">
         <div class="rci-bar" data-z="R"><div class="fill"></div><span>🏠</span></div>
@@ -73,8 +74,11 @@
     <div id="infoPanel" class="hidden"></div>
     <div id="tooltip" class="hidden"></div>
     <div id="toasts"></div>
+    <div id="walkHud" class="hidden">🚶 <b>Walking!</b> Arrow keys / WASD to walk · <kbd>E</kbd> go inside · <button class="btn" id="walkStuff">👛 My Stuff</button> <button class="btn" id="walkStop">🏗️ Back to building</button></div>
+    <div id="walkPrompt" class="hidden"></div>
   </div>
 
+  <div id="homeView" class="hidden"><canvas id="homeCanvas"></canvas><aside id="homePanel"></aside></div>
   <div id="banner" class="hidden"></div>
   <div id="modal" class="hidden"><div class="modal-card" id="modalCard"></div></div>
   <div id="title"></div>
@@ -93,6 +97,8 @@
   <script src="js/input.js"></script>
   <script src="js/save.js"></script>
   <script src="js/disasters.js"></script>
+  <script src="js/life.js"></script>
+  <script src="js/home.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
 </body>

@@ -30,6 +30,7 @@ function enterPlay() {
   Input.setTool('inspect'); Input.selected = null;
   UI.closeFlyout(); UI.hideInfo(); UI.setOverlay(null); UI.setSpeed(1);
   UI.sayQ = []; UI.saying = false; $('advisor').classList.add('hidden');
+  Life.toggleWalk(false); Home.isOpen = false; $('homeView').classList.add('hidden'); UI.updateWallet();
   UI.renderQuests();
   News.timer = 0; News.queue = []; News.recent = [];
   setSeason(seasonOf(W.month));
@@ -115,10 +116,12 @@ function frame(now) {
   const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
   const t = now / 1000;
   if (Game.state === 'play') {
-    const paused = UI.modalOpen();
+    const paused = UI.modalOpen() || Home.isOpen;
     const gdt = paused ? 0 : dt * Game.speed;
     simUpdate(gdt);
     Dis.update(gdt, dt);
+    if (!paused) Life.update(dt);
+    Home.draw(dt);
     Input.updateKeys(dt);
     Ents.update(dt, gdt, nightFactor());
     News.update(dt);

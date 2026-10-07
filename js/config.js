@@ -111,6 +111,7 @@ const BT = {
 };
 
 const TOOLBAR = [
+  { id: 'walk', icon: '🚶', label: 'Walk', key: 'g', special: true, tip: 'Walk around your city as yourself, with Moe! Visit shops and buy a home.' },
   { id: 'inspect', icon: '👆', label: 'Look', key: '1', tip: 'Look around. Click buildings to learn about them. Drag to move the map.' },
   { id: 'bulldoze', icon: '🚜', label: 'Bulldoze', key: '2', tip: 'Clear things away. Drag to clear an area.' },
   { id: 'road', icon: '🛣️', label: 'Road', key: '3', tip: `Drag to build roads. ${fmtMoney(ROAD_COST)} each (bridges over water cost more).` },

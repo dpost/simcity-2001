@@ -123,9 +123,11 @@ const Ents = {
     for (const c of this.cars) { const [u, v, dx, dy] = this.moverPos(c, 0.15); add(Math.floor(u) + Math.floor(v), { car: c, u, v, dx, dy }); }
     for (const p of this.peds) { const [u, v, dx, dy] = this.moverPos(p, 0.38 * p.side); add(Math.floor(u) + Math.floor(v), { ped: p, u, v, dx, dy }); }
     for (const b of this.boats) add(Math.floor(b.u) + Math.floor(b.v), { boat: b });
+    Life.bucketize(buckets);
   },
   drawItem(P, it, night, t) {
-    if (it.car) this.drawCar(P, it, night);
+    if (it.life) Life.drawItem(P, it, night, t);
+    else if (it.car) this.drawCar(P, it, night);
     else if (it.ped) this.drawPed(P, it, night, t);
     else if (it.boat) this.drawBoat(P, it.boat, t);
   },

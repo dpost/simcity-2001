@@ -104,6 +104,11 @@ const Input = {
     const k = e.key.toLowerCase();
     this.keys[k] = isDown;
     if (!isDown || Game.state !== 'play') return;
+    if (Home.isOpen) { Home.key(k); return; }
+    if (Life.walking && !UI.modalOpen()) {
+      if (k === 'e' || k === 'enter') { Life.interact(); return; }
+      if (k.startsWith('arrow') || 'wasd'.includes(k)) { e.preventDefault(); return; }
+    }
     if (k === 'escape') { if (!UI.closeTop()) { this.setTool('inspect'); UI.syncTools(); } return; }
     if (!UI.modalOpen()) {
       if (k === ' ') { e.preventDefault(); UI.setSpeed(Game.speed === 0 ? (Game.lastSpeed || 1) : 0); return; }
@@ -115,7 +120,7 @@ const Input = {
   },
 
   updateKeys(dt) {
-    if (Game.state !== 'play' || UI.modalOpen()) return;
+    if (Game.state !== 'play' || UI.modalOpen() || Life.walking || Home.isOpen) return;
     const k = this.keys, sp = 650 * dt / Cam.zoom;
     let dx = 0, dy = 0;
     if (k.a || k.arrowleft) dx -= sp; if (k.d || k.arrowright) dx += sp;

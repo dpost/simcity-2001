@@ -35,6 +35,14 @@ const UI = {
     $('menuBtn').addEventListener('click', () => { Sound.play('click'); this.openMenu(); });
     $('moneyBtn').addEventListener('click', () => { Sound.play('click'); this.openBudget(); });
     $('cityBtn').addEventListener('click', () => { Sound.play('click'); this.openRename(); });
+    $('walletBtn').addEventListener('click', () => { Sound.play('click'); MyStuff.open(); });
+    $('walkStuff').addEventListener('click', () => { Sound.play('click'); MyStuff.open(); });
+    $('walkStop').addEventListener('click', () => { Sound.play('click'); Life.toggleWalk(false); });
+    const hc = $('homeCanvas');
+    hc.addEventListener('pointerdown', (e) => Home.pointer(e, 'down'));
+    hc.addEventListener('pointermove', (e) => Home.pointer(e, 'move'));
+    hc.addEventListener('contextmenu', (e) => e.preventDefault());
+    addEventListener('resize', () => { if (Home.isOpen) Home.resize(); });
     $('advisor').addEventListener('click', () => this.nextSay(true));
     $('minimap').addEventListener('pointerdown', (e) => this.miniClick(e));
     $('minimap').addEventListener('pointermove', (e) => { if (e.buttons) this.miniClick(e); });
@@ -55,6 +63,8 @@ const UI = {
   clickTool(id) {
     const t = TOOLBAR.find((x) => x.id === id);
     Sound.play('click');
+    if (id === 'walk') { Life.toggleWalk(); return; }
+    if (Life.walking) Life.toggleWalk(false);
     if (t.special) {
       if (this.flyGroup === id) { this.closeFlyout(); return; }
       this.flyGroup = id; Input.setTool('inspect'); this.renderFlyout(); this.syncTools(); return;
@@ -68,7 +78,7 @@ const UI = {
     this.syncTools();
   },
   syncTools() {
-    document.querySelectorAll('.tool').forEach((b) => b.classList.toggle('on', b.dataset.tool === Input.tool || b.dataset.tool === this.flyGroup));
+    document.querySelectorAll('.tool').forEach((b) => b.classList.toggle('on', Life.walking ? b.dataset.tool === 'walk' : (b.dataset.tool === Input.tool || b.dataset.tool === this.flyGroup)));
     const q = W.quest && W.quest.active[0];
     document.querySelectorAll('.tool').forEach((b) => b.classList.toggle('hint', !!(q && q.tool === b.dataset.tool && Input.tool !== q.tool && this.flyGroup !== q.tool)));
   },
@@ -131,6 +141,10 @@ const UI = {
     return cv;
   },
 
+  updateWallet(pay) {
+    $('statWallet').textContent = fmtMoney(Life.wallet);
+    if (pay) { const el = $('walletBtn'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  },
   setSpeed(s) {
     if (s > 0) Game.lastSpeed = s;
     Game.speed = s;
@@ -154,6 +168,7 @@ const UI = {
     const net = $('statNet');
     if (W.mode !== 'creative' && S.income + S.expense > 0) { net.textContent = (S.net >= 0 ? '+' : '') + fmtMoney(S.net) + '/mo'; net.className = S.net >= 0 ? 'pos' : 'neg'; } else net.textContent = '';
     $('statHappy').textContent = S.happiness + '%';
+    $('statWallet').textContent = fmtMoney(Life.wallet);
     $('statHappyIco').textContent = S.happiness >= 75 ? '😄' : S.happiness >= 55 ? '🙂' : S.happiness >= 40 ? '😐' : '🙁';
     for (const z of ['R', 'C', 'I']) {
       const f = document.querySelector(`.rci-bar[data-z="${z}"] .fill`), d = S.demand[z];
@@ -354,10 +369,11 @@ const UI = {
   },
 
   // ---------------- modals ----------------
-  modal(html) { $('modalCard').innerHTML = html; $('modal').classList.remove('hidden'); },
-  closeModal() { $('modal').classList.add('hidden'); },
+  modal(html) { $('modalCard').classList.remove('wide'); $('modalCard').innerHTML = html; $('modal').classList.remove('hidden'); },
+  closeModal() { $('modal').classList.add('hidden'); $('modalCard').classList.remove('wide'); },
   modalOpen() { return !$('modal').classList.contains('hidden'); },
   closeTop() {
+    if (Life.walking && !this.modalOpen()) { Life.toggleWalk(false); return true; }
     if (this.modalOpen()) { this.closeModal(); return true; }
     if (!$('banner').classList.contains('hidden')) { $('banner').classList.add('hidden'); return true; }
     if (!$('infoPanel').classList.contains('hidden')) { Input.selected = null; this.hideInfo(); return true; }

@@ -229,7 +229,7 @@ const Dis = {
 // nuclear power plant: lots of clean power... but risky!
 BT.nuclear = { name: 'Nuclear Power Plant', icon: '☢️', cat: 'power', size: 2, cost: 12000, upkeep: 120, tier: 2, power: 900, ground: 'pave', h: 90, desc: 'Huge power with no smoke... but it could have a meltdown! ☢️' };
 TOOLBAR.find((t) => t.id === 'power').group.splice(2, 0, 'nuclear');
-TOOLBAR.push({ id: 'disasters', icon: '🌪️', label: 'Disasters', key: 'e', special: true });
+TOOLBAR.push({ id: 'disasters', icon: '🌪️', label: 'Disasters', key: 'x', special: true });
 ART.nuclear = (p) => {
   p.flat(0.15, 0.15, 1.85, 1.85, 0.2, '#d8dce2');
   const tower = (u, v) => {

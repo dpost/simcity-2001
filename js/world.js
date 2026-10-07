@@ -23,6 +23,7 @@ function newWorld({ seed, mode, cityName, difficulty = 'normal' }) {
   });
   genTerrain(seed);
   if (typeof Dis !== 'undefined') Dis.reset();
+  if (typeof Life !== 'undefined') Life.reset();
   initDerived();
 }
 
