@@ -250,6 +250,20 @@ function render(t, dt) {
       diamondPath(g, x, y); g.fillStyle = c; g.fill();
     }
   }
+  // soft building shadows (longer at sunrise / sunset)
+  if (night < 0.9) {
+    g.fillStyle = `rgba(30,40,70,${0.16 * (1 - night)})`;
+    g.beginPath();
+    for (const b of W.buildings.values()) {
+      if (b.x + b.size < u0 || b.x > u1 + 2 || b.y + b.size < v0 || b.y > v1 + 2) continue;
+      const t2 = BT[b.type];
+      if (t2 && (t2.park || t2.isTree)) continue;
+      const h = t2 ? (t2.h || 40) * 0.7 : ZHEIGHT[b.type][b.level] * 0.7, s = b.size, L = (h / 38) * (1 + dusk * 1.4);
+      const T = Pw(b.x, b.y), Rr = Pw(b.x + s + L, b.y), Bb = Pw(b.x + s + L, b.y + s), Lf = Pw(b.x, b.y + s);
+      g.moveTo(T[0], T[1]); g.lineTo(Rr[0], Rr[1]); g.lineTo(Bb[0], Bb[1]); g.lineTo(Lf[0], Lf[1]); g.closePath();
+    }
+    g.fill();
+  }
   if (night > 0.01) {
     g.fillStyle = `rgba(16,22,60,${night * 0.56})`; diamondPath(g, 0, 0, N); g.fill();
     g.globalCompositeOperation = 'lighter'; g.globalAlpha = night * 0.55;
@@ -276,6 +290,12 @@ function render(t, dt) {
         const spr = treeSprite(W.tree[i]);
         if (night < 0.97) g.drawImage(spr.cv, X - 32, Y - spr.height, spr.w, spr.h);
         if (night > 0.01) { g.globalAlpha = night < 0.97 ? night : 1; g.drawImage(spr.nv, X - 32, Y - spr.height, spr.w, spr.h); g.globalAlpha = 1; }
+      }
+      if (z > 0.55 && W.road[i] && ((x * 3 + y) % 4 === 0) && W.terrain[i] !== T_WATER) {
+        const [lx, ly] = Pw(x + 0.12, y + 0.12);
+        g.strokeStyle = night > 0.5 ? '#3a3f55' : '#6b7280'; g.lineWidth = 1; g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx, ly - 14); g.lineTo(lx + 3, ly - 15); g.stroke();
+        g.fillStyle = night > 0.2 ? '#fff3b0' : '#d8dde3'; g.fillRect(lx + 2, ly - 16, 3, 1.6);
+        if (night > 0.2) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = night * 0.8; g.drawImage(GLOW, lx - 5, ly - 21, 14, 12); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; }
       }
       if (showNeeds && D.needs[i] && ((x * 7 + y * 3) % 4 === 0 || W.bld[i] >= 0)) needs.push([X, Y, D.needs[i]]);
     }

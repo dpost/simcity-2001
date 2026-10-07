@@ -7,9 +7,9 @@ const SC = 2; // sprites are drawn at 2x so they stay crisp when zoomed in
 const SPRITE_FONT = '"Fredoka", "Arial Rounded MT Bold", Arial, sans-serif';
 
 const PAL = {
-  walls: ['#ffd6e0', '#ffe9a8', '#c9f2c7', '#cde7ff', '#e6d4ff', '#ffd8b0', '#f4efe4', '#b9ecec'],
-  roofs: ['#e0565b', '#5b7be0', '#8a5a44', '#3fa56b', '#9b59b6', '#e08a3c', '#d94f8a'],
-  tower: ['#f7c6d9', '#c6e2f7', '#d9f7c6', '#f7ecc6', '#e0d0f7', '#f0f0f0', '#ffd9b8', '#c8f0ec'],
+  walls: ['#ffd6e0', '#f2e2b8', '#c9e8c2', '#c8dcef', '#e6d4ff', '#e8c9a8', '#f4efe4', '#d9b99b'],
+  roofs: ['#c94b4b', '#5b6fa8', '#8a5a44', '#4f8a5e', '#5a5a66', '#c9763c', '#7a4033'],
+  tower: ['#f2c6d4', '#c6dcf0', '#d9cbb8', '#b9b4ad', '#ddd2ee', '#efefef', '#b8664e', '#c8e6e2'],
   flowers: ['#ff5d8f', '#ffd23f', '#ff8c42', '#b388ff', '#ffffff', '#ff4d4d'],
 };
 

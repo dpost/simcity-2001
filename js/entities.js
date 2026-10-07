@@ -32,7 +32,7 @@ const Ents = {
     } else {
       const r = Math.random();
       let kind = 'car';
-      if (r < 0.06 && S.pop > 250) kind = 'bus';
+      if (r < 0.06 + Math.min(0.2, ((S.counts.types || {}).busstop || 0) * 0.04) && S.pop > 120) kind = 'bus';
       else if (r < 0.1) kind = 'icecream';
       else if (r < 0.18 && (S.counts.I || 0) > 0) kind = 'truck';
       else if (r < 0.2 && (S.counts.types || {}).police) kind = 'police';
