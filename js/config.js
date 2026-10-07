@@ -22,7 +22,7 @@ const POSS = (name) => name + (/s$/i.test(name) ? "'" : "'s");
 // =====================================================================
 const N = 64;              // the map is N x N tiles
 const TW = 64, TH = 32;    // isometric tile size (pixels)
-const MONTH_SECONDS = 5;   // real seconds per game month at normal speed
+const MONTH_SECONDS = 10;  // real seconds per game month at normal speed (a season = 30s)
 const DAY_SECONDS = 150;   // real seconds for one full day + night
 const START_MONEY = 25000;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -40,9 +40,9 @@ const ROAD_COST = 10, BRIDGE_COST = 60, ZONE_COST = 10, CLEAR_TREE_COST = 5;
 
 // money: starting cash · income: taxes & tourism multiplier · cost: price multiplier
 const DIFFICULTY = {
-  easy: { name: 'Easy', icon: '🌱', money: 25000, income: 1, cost: 1, reward: 1, desc: 'Lots of money. Relaxed building.' },
-  normal: { name: 'Normal', icon: '⭐', money: 15000, income: 0.5, cost: 1.3, reward: 0.6, desc: 'Money is tight. Plan carefully!' },
-  hard: { name: 'Hard', icon: '🔥', money: 9000, income: 0.36, cost: 1.6, reward: 0.45, desc: 'Every dollar counts. For master mayors.' },
+  easy: { name: 'Easy', icon: '🌱', money: 25000, income: 1.8, cost: 1, reward: 1, desc: 'Lots of money. Relaxed building.' },
+  normal: { name: 'Normal', icon: '⭐', money: 15000, income: 0.85, cost: 1.3, reward: 0.6, desc: 'Money is tight. Plan carefully!' },
+  hard: { name: 'Hard', icon: '🔥', money: 9000, income: 0.6, cost: 1.6, reward: 0.45, desc: 'Every dollar counts. For master mayors.' },
 };
 
 // Zones grow buildings by themselves. cap = people (homes) or jobs (shops/factories) per level.

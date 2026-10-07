@@ -31,6 +31,7 @@ function enterPlay() {
   UI.sayQ = []; UI.saying = false; $('advisor').classList.add('hidden');
   UI.renderQuests();
   News.timer = 0; News.queue = []; News.recent = [];
+  setSeason(seasonOf(W.month));
   Game.autosaveT = 30;
 }
 
@@ -103,7 +104,7 @@ function buildDemoCity() {
   resetSimState(); primeSim();
   Ents.reset(); FX.reset();
   Ents.launchTimer = 8;
-  W.tod = 0.62;
+  W.tod = 0.62; W.month = 5; setSeason('summer');
   Cam.zoom = Cam.tz = 0.95; centerOnTile(32, 32);
 }
 

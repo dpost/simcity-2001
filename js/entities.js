@@ -237,7 +237,7 @@ const CLOUD = (() => {
 // =====================================================================
 const FW_COLS = ['#ff5d8f', '#ffd23f', '#5ce1e6', '#8fe36b', '#b48cff', '#ff8c42', '#ffffff'];
 const FX = {
-  parts: [], texts: [], shells: [], conf: [], showQueue: [], smokeT: 0,
+  parts: [], texts: [], shells: [], conf: [], showQueue: [], smokeT: 0, wx: [],
   reset() { this.parts = []; this.texts = []; this.shells = []; this.conf = []; this.showQueue = []; },
   smoke(X, Y, r, col, life = 3) {
     if (this.parts.length > 900) return;
@@ -311,6 +311,14 @@ const FX = {
     this.texts = this.texts.filter((t) => t.life > 0);
     for (const c of this.conf) { c.life -= dt; c.x += c.vx * dt; c.y += c.vy * dt; c.r += c.vr * dt; c.vx *= 0.99; }
     this.conf = this.conf.filter((c) => c.life > 0 && c.y < innerHeight + 20);
+    // seasonal weather: snow, falling leaves, spring petals
+    const want = { winter: 140, autumn: 30, spring: 30, summer: 0 }[SEASON] || 0;
+    if (this.wx.length < want && Math.random() < 0.6) {
+      const kind = SEASON;
+      this.wx.push({ kind, x: rnd(-40, innerWidth + 40), y: -10, vy: kind === 'winter' ? rnd(25, 55) : rnd(35, 60), sway: rnd(0.5, 1.5), ph: rnd(0, 6), r: kind === 'winter' ? rnd(1.2, 3) : rnd(3, 5), rot: rnd(0, 6), col: kind === 'autumn' ? pick(['#e8823a', '#d9534f', '#f2b134', '#c9763c']) : kind === 'spring' ? pick(['#ffc6dd', '#ffffff', '#ffd1e6']) : '#ffffff' });
+    }
+    for (const w of this.wx) { w.ph += dt * w.sway; w.y += w.vy * dt; w.x += Math.sin(w.ph) * 18 * dt + (w.kind === 'winter' ? 6 : 14) * dt; w.rot += dt * 2; }
+    this.wx = this.wx.filter((w) => w.y < innerHeight + 10 && (w.kind === SEASON || Math.random() > 0.02));
     // factory & power plant smoke
     this.smokeT -= dt;
     if (this.smokeT <= 0 && Game.state === 'play' || (this.smokeT <= 0 && Game.state === 'title')) {
@@ -346,6 +354,11 @@ const FX = {
     g.globalAlpha = 1;
   },
   drawScreen(g) {
+    for (const w of this.wx) {
+      if (w.kind === 'winter') { g.globalAlpha = 0.85; g.fillStyle = '#ffffff'; g.beginPath(); g.arc(w.x, w.y, w.r, 0, 7); g.fill(); continue; }
+      g.save(); g.translate(w.x, w.y); g.rotate(w.rot); g.globalAlpha = 0.9; g.fillStyle = w.col; g.beginPath(); g.ellipse(0, 0, w.r, w.r * 0.5, 0, 0, 7); g.fill(); g.restore();
+    }
+    g.globalAlpha = 1;
     for (const c of this.conf) { g.save(); g.translate(c.x, c.y); g.rotate(c.r); g.globalAlpha = clamp(c.life, 0, 1); g.fillStyle = c.col; g.fillRect(-c.w / 2, -c.h / 2, c.w, c.h); g.restore(); }
     g.globalAlpha = 1;
   },

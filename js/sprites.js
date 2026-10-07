@@ -4,6 +4,17 @@
 //  Sprites are drawn once into cached canvases (a day and a night version).
 // =====================================================================
 const SC = 2; // sprites are drawn at 2x so they stay crisp when zoomed in
+let SEASON = 'summer';
+const SEASONS = { spring: { icon: '🌸', name: 'Spring' }, summer: { icon: '☀️', name: 'Summer' }, autumn: { icon: '🍂', name: 'Autumn' }, winter: { icon: '❄️', name: 'Winter' } };
+const seasonOf = (month) => ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'][month] || 'summer';
+const GRASS_S = {
+  spring: ['#92d86c', '#99dc72', '#8ed266', '#96d870'],
+  summer: ['#8cd068', '#93d46e', '#88cb64', '#90cf6a'],
+  autumn: ['#b2c45e', '#bac866', '#a9bd57', '#c0c86c'],
+  winter: ['#eef3f8', '#f3f6fa', '#e8eff6', '#f0f4f9'],
+};
+const grassCol = (v = 0) => GRASS_S[SEASON][v];
+const snowy = () => SEASON === 'winter';
 const SPRITE_FONT = '"Fredoka", "Arial Rounded MT Bold", Arial, sans-serif';
 
 const PAL = {
@@ -14,7 +25,7 @@ const PAL = {
 };
 
 class Painter {
-  constructor(g, size = 1) { this.g = g; this.size = size; this.lights = []; this.glows = []; this.emitters = []; }
+  constructor(g, size = 1) { this.g = g; this.size = size; this.lights = []; this.glows = []; this.emitters = []; this.season = SEASON; }
   iso(u, v, z = 0) { return [(u - v) * 32, (u + v) * 16 - z]; }
   path(pts) { const g = this.g; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); }
   poly(pts, fill, stroke, lw = 0.6) {
@@ -30,7 +41,7 @@ class Painter {
     const ol = o.outline === false ? null : 'rgba(40,30,60,0.25)';
     this.poly(this.qL(u0, u1, v1, z0, z1), o.left || col, ol);
     this.poly(this.qR(v0, v1, u1, z0, z1), o.right || shade(col, -0.2), ol);
-    if (!o.noTop) this.poly(this.qT(u0, v0, u1, v1, z1), o.top || shade(col, 0.25), ol);
+    if (!o.noTop) this.poly(this.qT(u0, v0, u1, v1, z1), o.top || (this.season === 'winter' && z1 > 3 ? '#f3f7fc' : shade(col, 0.25)), ol);
   }
   flat(u0, v0, u1, v1, z, col, stroke) { this.poly(this.qT(u0, v0, u1, v1, z), col, stroke); }
   winsL(u0, u1, v, z0, z1, cols, rows, o = {}) {
@@ -54,6 +65,7 @@ class Painter {
   doorL(uc, v, w, h, col) { this.poly(this.qL(uc - w / 2, uc + w / 2, v, 0, h), col, 'rgba(0,0,0,0.35)'); }
   doorR(vc, u, w, h, col) { this.poly(this.qR(vc - w / 2, vc + w / 2, u, 0, h), col, 'rgba(0,0,0,0.35)'); }
   gable(u0, v0, u1, v1, z, h, roof, wall, axis = 'u') {
+    if (this.season === 'winter') roof = mix(roof, '#f6f9fd', 0.82);
     const s = 'rgba(40,30,60,0.3)', e = 0.05;
     if (axis === 'u') {
       const vm = (v0 + v1) / 2;
@@ -68,6 +80,7 @@ class Painter {
     }
   }
   hip(u0, v0, u1, v1, z, h, roof) {
+    if (this.season === 'winter') roof = mix(roof, '#f6f9fd', 0.82);
     const a = this.iso((u0 + u1) / 2, (v0 + v1) / 2, z + h), s = 'rgba(40,30,60,0.3)';
     this.poly([this.iso(u0, v0, z), this.iso(u1, v0, z), a], shade(roof, 0.12), s);
     this.poly([this.iso(u0, v0, z), this.iso(u0, v1, z), a], shade(roof, 0.25), s);
@@ -165,21 +178,31 @@ class Painter {
     const [x, y] = this.iso(u, v, z), g = this.g;
     g.fillStyle = 'rgba(20,40,10,0.18)'; g.beginPath(); g.ellipse(x + 2 * s, y, 9 * s, 4.5 * s, 0, 0, Math.PI * 2); g.fill();
     g.fillStyle = '#8a5a3c'; g.fillRect(x - 1.5 * s, y - 12 * s, 3 * s, 12 * s);
+    const season = this.season;
     if (kind === 1) { // pine
       const cols = ['#2f8f4e', '#38a55a', '#46b866'];
       for (let i = 0; i < 3; i++) {
         const yy = y - 8 * s - i * 8 * s, w = (11 - i * 2.5) * s;
         this.poly([[x - w, yy], [x + w, yy], [x, yy - 13 * s]], cols[i], 'rgba(20,60,30,0.4)');
+        if (season === 'winter') this.poly([[x - w * 0.55, yy - 5.5 * s], [x + w * 0.55, yy - 5.5 * s], [x, yy - 13 * s]], '#f4f8fc');
       }
       return;
     }
-    const col = ['#4caf50', '#4caf50', '#ff9fcf', '#ff9f43', '#6cc04a'][kind] || '#4caf50';
+    if (season === 'winter') { // bare branches with a little snow
+      g.strokeStyle = '#7a4f35'; g.lineCap = 'round';
+      const br = [[0, -12, 0, -30, 2.2], [0, -18, -8, -27, 1.4], [0, -21, 8, -29, 1.4], [0, -25, -5, -33, 1.1], [-4, -23, -10, -24, 1], [4, -25, 10, -24, 1]];
+      for (const [a, b, c, d, w] of br) { g.lineWidth = w * s; g.beginPath(); g.moveTo(x + a * s, y + b * s); g.lineTo(x + c * s, y + d * s); g.stroke(); }
+      for (const [, , c, d] of br.slice(1)) { g.fillStyle = '#ffffff'; g.beginPath(); g.ellipse(x + c * s, y + d * s - 0.5, 2 * s, 1 * s, 0, 0, Math.PI * 2); g.fill(); }
+      return;
+    }
+    let col = ['#4caf50', '#4caf50', '#ff9fcf', '#ff9f43', '#6cc04a'][kind] || '#4caf50';
+    if (season === 'autumn') col = ['#e8823a', '#d9534f', '#f2b134', '#e8823a', '#c9a227'][kind] || '#e8823a';
     this.ball(x - 5 * s, y - 15 * s, 7 * s, shade(col, -0.08));
     this.ball(x + 5 * s, y - 16 * s, 7 * s, shade(col, -0.04));
     this.ball(x, y - 22 * s, 9 * s, col);
-    if (kind === 2) for (let i = 0; i < 6; i++) this.circle(x + Math.sin(i * 2.3) * 7 * s, y - 20 * s + Math.cos(i * 1.7) * 6 * s, 1.1 * s, '#ffffff');
+    if ((kind === 2 && season !== 'autumn') || (season === 'spring' && kind !== 3)) for (let i = 0; i < (season === 'spring' ? 10 : 6); i++) this.circle(x + Math.sin(i * 2.3) * 7 * s, y - 20 * s + Math.cos(i * 1.7) * 6 * s, 1.2 * s, season === 'spring' ? (i % 2 ? '#ffd1e6' : '#ffffff') : '#ffffff');
   }
-  bush(u, v, s = 1, col = '#5cb85c') { const [x, y] = this.iso(u, v, 0); this.ball(x - 3 * s, y - 3 * s, 4 * s, col); this.ball(x + 3 * s, y - 3 * s, 4 * s, shade(col, -0.05)); this.ball(x, y - 5 * s, 4.5 * s, shade(col, 0.05)); }
+  bush(u, v, s = 1, col = '#5cb85c') { if (this.season === 'winter') col = '#e9f0f6'; else if (this.season === 'autumn') col = '#b9a24a'; const [x, y] = this.iso(u, v, 0); this.ball(x - 3 * s, y - 3 * s, 4 * s, col); this.ball(x + 3 * s, y - 3 * s, 4 * s, shade(col, -0.05)); this.ball(x, y - 5 * s, 4.5 * s, shade(col, 0.05)); }
   flowers(u0, v0, u1, v1, n, rr) {
     for (let i = 0; i < n; i++) { const [x, y] = this.iso(lerp(u0, u1, rr()), lerp(v0, v1, rr()), 0); this.circle(x, y - 1, 1.3, PAL.flowers[Math.floor(rr() * PAL.flowers.length)]); }
   }
@@ -221,6 +244,7 @@ class Painter {
 // ---------------------------------------------------------------------
 const SPR = new Map();
 function makeSprite(key, size, height, fn) {
+  key += '|' + SEASON;
   let spr = SPR.get(key);
   if (spr) return spr;
   const w = size * TW, h = size * TH + height;
@@ -249,6 +273,14 @@ function makeSprite(key, size, height, fn) {
   spr = { cv, nv, w, h, size, height, emit: p.emitters };
   SPR.set(key, spr);
   return spr;
+}
+// called when the season changes: forget sprites from older seasons
+function setSeason(se) {
+  if (se === SEASON) return false;
+  const prev = SEASON; SEASON = se;
+  for (const m of [SPR, TILES]) for (const k of [...m.keys()]) { const s = k.split('|')[1]; if (s !== se && s !== prev) m.delete(k); }
+  if (typeof markAllGround === 'function') markAllGround();
+  return true;
 }
 function clearSpriteCache() { SPR.clear(); TILES.clear(); if (typeof markAllGround === 'function') markAllGround(); }
 
@@ -987,6 +1019,7 @@ const ANIM = {
 // ---------------------------------------------------------------------
 const TILES = new Map();
 function tileCanvas(key, fn) {
+  key += '|' + SEASON;
   let cv = TILES.get(key);
   if (cv) return cv;
   cv = document.createElement('canvas'); cv.width = TW * SC; cv.height = TH * SC;
@@ -999,18 +1032,20 @@ const DIAMOND = (grow = 0.6) => [[0, -grow], [TW / 2 + grow * 2, TH / 2], [0, TH
 const GRASS = ['#8cd068', '#93d46e', '#88cb64', '#90cf6a'];
 function grassTile(v) {
   return tileCanvas('grass' + v, (p, g, rr) => {
-    p.poly(DIAMOND(), GRASS[v]);
+    p.poly(DIAMOND(), grassCol(v));
+    if (snowy()) { for (let i = 0; i < 5; i++) { const [x, y] = p.iso(0.1 + rr() * 0.8, 0.1 + rr() * 0.8, 0); p.ellipse(x, y, 3, 1.2, 'rgba(160,185,210,0.25)'); } return; }
     for (let i = 0; i < 7; i++) { const u = 0.1 + rr() * 0.8, w = 0.1 + rr() * 0.8, [x, y] = p.iso(u, w, 0); g.strokeStyle = 'rgba(60,130,40,0.35)'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x, y); g.lineTo(x - 1, y - 2.5); g.moveTo(x + 1, y); g.lineTo(x + 1.5, y - 2); g.stroke(); }
-    if (v === 3) for (let i = 0; i < 3; i++) { const [x, y] = p.iso(0.15 + rr() * 0.7, 0.15 + rr() * 0.7, 0); p.circle(x, y, 0.9, PAL.flowers[i * 2]); }
+    if (SEASON === 'autumn') for (let i = 0; i < 4; i++) { const [x, y] = p.iso(0.1 + rr() * 0.8, 0.1 + rr() * 0.8, 0); p.ellipse(x, y, 1.3, 0.8, pick(['#e8823a', '#d9534f', '#f2b134'])); }
+    if (v === 3 || SEASON === 'spring') for (let i = 0; i < 3; i++) { const [x, y] = p.iso(0.15 + rr() * 0.7, 0.15 + rr() * 0.7, 0); p.circle(x, y, 0.9, PAL.flowers[i * 2]); }
   });
 }
 function plainTile(key, col, detail) {
   return tileCanvas(key, (p, g, rr) => { p.poly(DIAMOND(), col); if (detail) detail(p, g, rr); });
 }
-function sandTile() { return plainTile('sand', '#f1dc9a', (p, g, rr) => { for (let i = 0; i < 8; i++) { const [x, y] = p.iso(rr(), rr(), 0); p.circle(x, y, 0.5, '#d8bf7c'); } }); }
+function sandTile() { return plainTile('sand', snowy() ? '#f1efe6' : '#f1dc9a', (p, g, rr) => { for (let i = 0; i < 8; i++) { const [x, y] = p.iso(rr(), rr(), 0); p.circle(x, y, 0.5, '#d8bf7c'); } }); }
 function waterTile(f) {
   return tileCanvas('water' + f, (p, g, rr) => {
-    p.poly(DIAMOND(), '#4aa8e0');
+    p.poly(DIAMOND(), snowy() ? '#7cbde6' : '#4aa8e0');
     g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 0.9;
     for (let i = 0; i < 3; i++) {
       const u = (rr() + f * 0.08) % 1, v = rr(); const [x, y] = p.iso(0.15 + u * 0.7, 0.15 + v * 0.7, 0);
@@ -1019,15 +1054,15 @@ function waterTile(f) {
   });
 }
 function lotTile(kind) {
-  const cols = { pave: '#d9d4cc', dirt: '#cdb88f', grass: '#93d46e', lotR: '#a3dc7f' };
-  return plainTile('lot_' + kind, cols[kind] || '#93d46e', (p, g) => {
+  const w = snowy(), cols = { pave: w ? '#e9ecf0' : '#d9d4cc', dirt: w ? '#e6e2da' : '#cdb88f', grass: grassCol(1), lotR: w ? '#f6f9fc' : SEASON === 'autumn' ? '#c2cc72' : '#a3dc7f' };
+  return plainTile('lot_' + kind, cols[kind] || grassCol(1), (p, g) => {
     if (kind === 'pave') { g.strokeStyle = 'rgba(0,0,0,0.06)'; g.lineWidth = 0.5; for (let k = 1; k < 4; k++) { p.line(p.iso(k / 4, 0, 0), p.iso(k / 4, 1, 0), 'rgba(0,0,0,0.06)', 0.5); p.line(p.iso(0, k / 4, 0), p.iso(1, k / 4, 0), 'rgba(0,0,0,0.06)', 0.5); } }
     if (kind === 'lotR') p.poly(p.qT(0.04, 0.04, 0.96, 0.96, 0), null, 'rgba(60,120,40,0.25)', 0.8);
   });
 }
 function zoneTile(z) {
   return tileCanvas('zone' + z, (p, g) => {
-    p.poly(DIAMOND(), GRASS[0]);
+    p.poly(DIAMOND(), grassCol(0));
     const col = ZONES[z].color;
     p.poly(p.qT(0.06, 0.06, 0.94, 0.94, 0), alpha(col, 0.32));
     g.setLineDash([3, 2]); p.poly(p.qT(0.1, 0.1, 0.9, 0.9, 0), null, alpha(col, 0.95), 1.1); g.setLineDash([]);
@@ -1035,7 +1070,7 @@ function zoneTile(z) {
 }
 function roadTile(mask, bridge) {
   return tileCanvas(`road${mask}_${bridge ? 1 : 0}`, (p, g) => {
-    p.poly(DIAMOND(), bridge ? '#4aa8e0' : GRASS[0]);
+    p.poly(DIAMOND(), bridge ? (snowy() ? '#7cbde6' : '#4aa8e0') : grassCol(0));
     const shapes = (w) => {
       const r = [[0.5 - w, 0.5 - w, 0.5 + w, 0.5 + w]];
       if (mask & 1) r.push([0.5 - w, -0.03, 0.5 + w, 0.5]);
@@ -1047,7 +1082,7 @@ function roadTile(mask, bridge) {
     if (bridge) {
       for (const s of shapes(0.37)) p.poly(p.qT(s[0], s[1], s[2], s[3], 0), '#b0896a');
       for (const s of shapes(0.37)) p.poly(p.qT(s[0], s[1], s[2], s[3], 0), null, 'rgba(255,255,255,0.8)', 1);
-    } else for (const s of shapes(0.41)) p.poly(p.qT(s[0], s[1], s[2], s[3], 0), '#d7d2c8');
+    } else for (const s of shapes(0.41)) p.poly(p.qT(s[0], s[1], s[2], s[3], 0), snowy() ? '#f2f5f9' : '#d7d2c8');
     for (const s of shapes(0.29)) p.poly(p.qT(s[0], s[1], s[2], s[3], 0), '#5d6370');
     const conns = [1, 2, 4, 8].filter((b) => mask & b), ends = { 1: [0.5, 0], 2: [1, 0.5], 4: [0.5, 1], 8: [0, 0.5] };
     g.setLineDash([2.5, 2.5]); g.lineWidth = 0.9; g.strokeStyle = 'rgba(255,235,140,0.95)';

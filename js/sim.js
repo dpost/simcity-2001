@@ -212,7 +212,12 @@ function monthTick() {
     if (W.money > 0) W.flags.brokeWarned = false;
   }
   W.month++;
-  if (W.month >= 12) { W.month = 0; W.year++; UI.toast(`🎆 Happy New Year ${W.year}!`); FX.fireworksShow(6, 4); }
+  if (W.month >= 12) W.month = 0;
+  if (setSeason(seasonOf(W.month))) {
+    const se = SEASONS[SEASON], line = { winter: 'Snow is falling! Bundle up!', spring: 'Flowers are blooming everywhere!', summer: 'Sunny days! Time for the pool!', autumn: 'The leaves are turning orange and red!' }[SEASON];
+    UI.toast(`${se.icon} ${se.name} is here! ${line}`);
+  }
+  if (W.month === 0) { W.year++; UI.toast(`🎆 Happy New Year ${W.year}!`); FX.fireworksShow(6, 4); }
   News.monthly();
 }
 

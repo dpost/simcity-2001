@@ -171,8 +171,8 @@ function drawIsland(g, night) {
   g.strokeStyle = dk('#c99a6a'); g.lineWidth = 1.5; g.globalAlpha = 0.5;
   for (const f of [0.35, 0.65]) { g.beginPath(); g.moveTo(L[0], L[1] + Dp * 0.6 * f); g.lineTo(B[0], B[1] + Dp * f); g.lineTo(Rr[0], Rr[1] + Dp * 0.6 * f); g.stroke(); }
   g.globalAlpha = 1;
-  g.fillStyle = dk('#6cbf4f'); g.beginPath(); g.moveTo(L[0], L[1]); g.lineTo(B[0], B[1]); g.lineTo(Rr[0], Rr[1]); g.lineTo(Rr[0], Rr[1] + 5); g.lineTo(B[0], B[1] + 6); g.lineTo(L[0], L[1] + 5); g.closePath(); g.fill();
-  g.fillStyle = GRASS[0]; g.beginPath(); g.moveTo(T[0], T[1]); g.lineTo(Rr[0], Rr[1]); g.lineTo(B[0], B[1]); g.lineTo(L[0], L[1]); g.closePath(); g.fill();
+  g.fillStyle = dk(snowy() ? '#dbe6ef' : SEASON === 'autumn' ? '#a3b553' : '#6cbf4f'); g.beginPath(); g.moveTo(L[0], L[1]); g.lineTo(B[0], B[1]); g.lineTo(Rr[0], Rr[1]); g.lineTo(Rr[0], Rr[1] + 5); g.lineTo(B[0], B[1] + 6); g.lineTo(L[0], L[1] + 5); g.closePath(); g.fill();
+  g.fillStyle = grassCol(0); g.beginPath(); g.moveTo(T[0], T[1]); g.lineTo(Rr[0], Rr[1]); g.lineTo(B[0], B[1]); g.lineTo(L[0], L[1]); g.closePath(); g.fill();
 }
 
 function diamondPath(g, x, y, s = 1) {

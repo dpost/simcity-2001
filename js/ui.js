@@ -139,7 +139,7 @@ const UI = {
     $('powerStat').classList.toggle('warn', S.shortage);
     const night = nightFactor();
     $('timeIco').textContent = night > 0.5 ? '🌙' : duskFactor() > 0.4 ? '🌅' : '🌞';
-    $('statDate').textContent = `${MONTHS[W.month]}, Year ${W.year}`;
+    $('statDate').textContent = `${SEASONS[SEASON].icon} ${MONTHS[W.month]}, Year ${W.year}`;
     $('cityName').textContent = W.cityName;
     $('tierBadge').textContent = `${TIERS[W.tier].icon} ${TIERS[W.tier].name}`;
     this.miniT -= dt;
