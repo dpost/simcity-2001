@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Mayor Nelly's City</title>
+  <meta name="description" content="A cozy city builder made just for Nelly.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏙️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="view"></canvas>
+
+  <div id="hud" class="hidden">
+    <header id="topbar">
+      <button id="cityBtn" class="tb-city" title="Rename your city">
+        <span id="cityName">City</span>
+        <span id="tierBadge" class="badge">Village</span>
+      </button>
+      <div class="tb-stat" title="Population"><span class="ico">👥</span><b id="statPop">0</b></div>
+      <button class="tb-stat tb-btn" id="moneyBtn" title="Money (click for budget &amp; taxes)"><span class="ico">💰</span><b id="statMoney">$0</b><small id="statNet"></small></button>
+      <div class="tb-stat" title="Happiness"><span class="ico" id="statHappyIco">🙂</span><b id="statHappy">50%</b></div>
+      <div class="tb-stat rci" title="What does your city want? Tall bars = build more of that!">
+        <div class="rci-bar" data-z="R"><div class="fill"></div><span>🏠</span></div>
+        <div class="rci-bar" data-z="C"><div class="fill"></div><span>🍦</span></div>
+        <div class="rci-bar" data-z="I"><div class="fill"></div><span>🏭</span></div>
+      </div>
+      <div class="tb-stat" id="powerStat" title="Power used / power made"><span class="ico">⚡</span><b id="statPower">0/0</b></div>
+      <div class="tb-stat" title="Date"><span class="ico" id="timeIco">🌞</span><b id="statDate">Jan Y1</b></div>
+      <div class="tb-group" id="speedBtns">
+        <button data-speed="0" title="Pause (Space)">⏸</button>
+        <button data-speed="1" title="Normal speed">▶</button>
+        <button data-speed="2" title="Fast">⏩</button>
+        <button data-speed="4" title="Super fast">⏭</button>
+      </div>
+      <div class="tb-group">
+        <button id="musicBtn" title="Music on/off">🎵</button>
+        <button id="sfxBtn" title="Sound effects on/off">🔊</button>
+        <button id="menuBtn" title="Menu">☰</button>
+      </div>
+    </header>
+
+    <nav id="toolbar"></nav>
+    <div id="flyout" class="hidden"></div>
+
+    <aside id="questPanel">
+      <div class="qp-head"><img id="questDog" alt=""><div><b>Quests</b><small>from Chief Advisor <span class="dogname"></span></small></div></div>
+      <div id="questList"></div>
+    </aside>
+
+    <div id="advisor" class="hidden">
+      <img id="advisorImg" alt="">
+      <div class="bubble"><b id="advisorName"></b><p id="advisorText"></p><small>click to close</small></div>
+    </div>
+
+    <div id="mapBox">
+      <div id="overlayBtns">
+        <button data-ov="" class="on" title="Normal view">🗺️</button>
+        <button data-ov="power" title="Power: yellow = powered, red = no power">⚡</button>
+        <button data-ov="happy" title="Happiness: green = nice place to live">😊</button>
+        <button data-ov="poll" title="Pollution: brown = smoky">🌫️</button>
+        <button data-ov="safety" title="Services: blue = covered by police, fire, schools &amp; hospitals">🛡️</button>
+      </div>
+      <div id="overlayLegend"></div>
+      <canvas id="minimap" width="192" height="100"></canvas>
+    </div>
+
+    <div id="ticker"><span class="tk-label">📰 NEWS</span><div class="tk-wrap"><div id="tickerText"></div></div></div>
+    <div id="infoPanel" class="hidden"></div>
+    <div id="tooltip" class="hidden"></div>
+    <div id="toasts"></div>
+  </div>
+
+  <div id="banner" class="hidden"></div>
+  <div id="modal" class="hidden"><div class="modal-card" id="modalCard"></div></div>
+  <div id="title"></div>
+
+  <script src="js/util.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/sim.js"></script>
+  <script src="js/quests.js"></script>
+  <script src="js/news.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
